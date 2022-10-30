@@ -30,3 +30,32 @@ func Insert(data *RegUser) (code int) {
 	}
 	return result.SUCCSE
 }
+
+// 查询用户列表
+func FindAll(pageSize int, pageNum int) []RegUser {
+	var users []RegUser
+	err := Db.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&users).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil
+	}
+	return users
+}
+
+// 根据id，软删除用户信息
+func DeleteById(id int) int {
+	err := Db.Delete(&RegUser{}, "id=?", id).Error
+	if err != nil {
+		return result.ERROR
+	}
+	return result.SUCCSE
+}
+
+// 按username查询
+//func FindByName(username string) RegUser {
+//	var regUser RegUser
+//	err := Db.Take(&regUser, "user_name=?", username).Error
+//	if err != nil && err != gorm.ErrRecordNotFound {
+//		return
+//	}
+//	return
+//}

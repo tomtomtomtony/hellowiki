@@ -13,6 +13,8 @@ func InitRouter() *gin.Engine {
 	routerV1 := r.Group("api/v1")
 	{
 		routerV1.POST("user/register", user.Register)
+		routerV1.GET("user/all", user.QueryAllUserInfo)
+		routerV1.DELETE("user/del/:id", user.DeleteUser)
 	}
 	return r
 }
