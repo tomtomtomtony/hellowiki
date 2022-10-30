@@ -1,0 +1,7 @@
+[wikiInfo]
+WikiName="helloWiki"
+[dataBase]
+Location="./data/db/hellowiki.db"
+[server]
+AppMode="debug"
+Port=":8080"
