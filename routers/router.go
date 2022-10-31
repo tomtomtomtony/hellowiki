@@ -15,6 +15,7 @@ func InitRouter() *gin.Engine {
 		routerV1.POST("user/register", user.Register)
 		routerV1.GET("user/all", user.QueryAllUserInfo)
 		routerV1.DELETE("user/del/:id", user.DeleteUser)
+		routerV1.PUT("user/edt/:id", user.SetUserName)
 	}
 	return r
 }

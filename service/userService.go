@@ -2,12 +2,13 @@ package service
 
 import (
 	"golang.org/x/crypto/bcrypt"
+	"hellowiki/common/result"
 	"hellowiki/model"
 	"log"
 )
 
 func CreateUser(userInfo *model.RegUser) (code int) {
-	codeHas := model.HasUser(userInfo.UserName)
+	codeHas := model.HasUserByName(userInfo.UserName)
 	if codeHas != 200 {
 		return codeHas
 	}
@@ -35,4 +36,13 @@ func pswCrypt(password string) string {
 		log.Println(err)
 	}
 	return string(hash)
+}
+
+func SetUserName(id uint, condition model.RegUser) int {
+	if model.HasUserById(id) == 200 {
+		return result.ERROR_USER_NOT_FOUND
+	}
+	var userInfo model.RegUser
+	userInfo = condition
+	return model.UpdateById(id, userInfo)
 }

@@ -45,3 +45,18 @@ func QueryAllUserInfo(c *gin.Context) {
 		"message": result.GetErrMsg(code),
 	})
 }
+
+func SetUserName(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	var condition model.RegUser
+	_ = c.ShouldBind(&condition)
+	code = service.SetUserName(uint(id), condition)
+	if code == result.ERROR_USER_NOT_FOUND {
+		code = result.ERROR_USER_NOT_FOUND
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"status":  code,
+		"message": result.GetErrMsg(code),
+	})
+}
