@@ -1,4 +1,4 @@
-package user
+package category
 
 import (
 	"github.com/gin-gonic/gin"
@@ -11,16 +11,16 @@ import (
 
 var code int
 
-func Register(c *gin.Context) {
-	var userInfo model.RegUser
-	_ = c.ShouldBind(&userInfo)
-	code = service.CreateUser(&userInfo)
-	if code == result.ERROR_USERNAME_USED {
-		code = result.ERROR_USERNAME_USED
+func CreateCategory(c *gin.Context) {
+	var category model.Category
+	_ = c.ShouldBind(&category)
+	code = service.CreateCategory(&category)
+	if code == result.ERROR_CATEGORY_USED {
+		code = result.ERROR_CATEGORY_USED
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
-		"data":    userInfo,
+		"data":    category,
 		"message": result.GetErrMsg(code),
 	})
 }

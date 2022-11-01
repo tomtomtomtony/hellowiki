@@ -34,7 +34,7 @@ func HasUserByName(userName string) (code int) {
 }
 
 // 插入用户数据
-func Insert(data *RegUser) (code int) {
+func CreateUser(data *RegUser) (code int) {
 	err := Db.Create(&data).Error
 	if err != nil {
 		return result.ERROR
@@ -43,17 +43,17 @@ func Insert(data *RegUser) (code int) {
 }
 
 // 查询用户列表
-func FindAll(pageSize int, pageNum int) []RegUser {
+func FindAllUser(pageSize int, pageNum int) []RegUser {
 	var users []RegUser
 	err := Db.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&users).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return nil
+		return []RegUser{}
 	}
 	return users
 }
 
 // 根据id，软删除用户信息
-func DeleteById(id int) int {
+func DeleteUserById(id int) int {
 	err := Db.Delete(&RegUser{}, "id=?", id).Error
 	if err != nil {
 		return result.ERROR
@@ -62,7 +62,7 @@ func DeleteById(id int) int {
 }
 
 // 根据id，更新用户信息
-func UpdateById(id uint, regUser RegUser) int {
+func UpdateUserById(id uint, regUser RegUser) int {
 	err := Db.Model(&regUser).Where("id=?", id).Updates(regUser).Error
 	if err != nil {
 		return result.ERROR

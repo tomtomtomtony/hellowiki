@@ -14,7 +14,7 @@ func CreateUser(userInfo *model.RegUser) (code int) {
 	}
 	//密码加密
 	userInfo.PassWord = pswCrypt(userInfo.PassWord)
-	codeInsert := model.Insert(userInfo)
+	codeInsert := model.CreateUser(userInfo)
 	if codeInsert != 200 {
 		return codeInsert
 	}
@@ -22,11 +22,11 @@ func CreateUser(userInfo *model.RegUser) (code int) {
 }
 
 func GetAllRegUserInfo(pageSize int, pageNum int) []model.RegUser {
-	return model.FindAll(pageSize, pageNum)
+	return model.FindAllUser(pageSize, pageNum)
 }
 
 func DeleteUser(userId int) int {
-	return model.DeleteById(userId)
+	return model.DeleteUserById(userId)
 }
 
 // 密码加密
@@ -38,11 +38,9 @@ func pswCrypt(password string) string {
 	return string(hash)
 }
 
-func SetUserName(id uint, condition model.RegUser) int {
+func SetUser(id uint, condition model.RegUser) int {
 	if model.HasUserById(id) == 200 {
 		return result.ERROR_USER_NOT_FOUND
 	}
-	var userInfo model.RegUser
-	userInfo = condition
-	return model.UpdateById(id, userInfo)
+	return model.UpdateUserById(id, condition)
 }

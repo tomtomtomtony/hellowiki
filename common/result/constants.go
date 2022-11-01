@@ -11,13 +11,19 @@ const (
 	ERROR_USERNAME_USED  = 1001
 	ERROR_PASSWORD_WRONG = 1002
 	ERROR_USER_NOT_FOUND = 1003
+
+	//分类模块错误
+	ERROR_CATEGORY_USED      = 2001
+	ERROR_CATEGORY_NOT_FOUND = 2002
 )
 
 var codeMsg = map[int]string{
-	SUCCSE:               "OK",
-	ERROR:                "FAIL",
-	ERROR_USERNAME_USED:  "用户已存在",
-	ERROR_USER_NOT_FOUND: "用户不存在",
+	SUCCSE:                   "OK",
+	ERROR:                    "FAIL",
+	ERROR_USERNAME_USED:      "用户已存在",
+	ERROR_USER_NOT_FOUND:     "用户不存在",
+	ERROR_CATEGORY_USED:      "该分类已存在",
+	ERROR_CATEGORY_NOT_FOUND: "该分类不存在",
 }
 
 func GetErrMsg(code int) string {
