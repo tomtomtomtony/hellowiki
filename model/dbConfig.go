@@ -25,7 +25,7 @@ func InitDB() {
 	if err != nil {
 		panic("fail to connect database")
 	}
-	err = Db.AutoMigrate(&RegUser{})
+	err = Db.AutoMigrate(&RegUser{}, &Category{})
 	if err != nil {
 		panic("建表失败")
 	}

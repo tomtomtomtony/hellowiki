@@ -27,7 +27,7 @@ func HasCategoryById(id uint) (code int) {
 	Db.Take(&category, "id=?", id)
 	if category.ID > 0 {
 		//分类已存在
-		return result.ERROR_CATEGORY_USED
+		return result.ERROR_CATEGORY_EXIST
 	}
 	//分类不存在
 	return result.SUCCSE
@@ -68,4 +68,13 @@ func UpdateCategoryById(id uint, category Category) int {
 		return result.ERROR
 	}
 	return result.SUCCSE
+}
+
+// 根据parentId批量更新
+func UpdateCategoryBulkByParentId(parentId uint, category Category) (int, error) {
+	err := Db.Model(&category).Where("parentId=?", parentId).Updates(category).Error
+	if err != nil {
+		return result.ERROR, err
+	}
+	return result.SUCCSE, err
 }

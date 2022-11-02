@@ -11,12 +11,13 @@ import (
 
 var code int
 
+// 创建根分类
 func CreateCategory(c *gin.Context) {
 	var category model.Category
 	_ = c.ShouldBind(&category)
 	code = service.CreateCategory(&category)
-	if code == result.ERROR_CATEGORY_USED {
-		code = result.ERROR_CATEGORY_USED
+	if code == result.ERROR_CATEGORY_EXIST {
+		code = result.ERROR_CATEGORY_EXIST
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
@@ -25,20 +26,21 @@ func CreateCategory(c *gin.Context) {
 	})
 }
 
-func DeleteUser(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	code := service.DeleteUser(id)
+func DeleteCategory(c *gin.Context) {
+	var category model.Category
+	_ = c.ShouldBind(&category)
+	code := service.DeleteCategory(category)
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
 		"message": result.GetErrMsg(code),
 	})
 }
 
-func QueryAllUserInfo(c *gin.Context) {
+func QueryAllCategory(c *gin.Context) {
 	var pageSize, pageNum = 10, 1
 	pageSize, _ = strconv.Atoi(c.Query("pageSize"))
 	pageNum, _ = strconv.Atoi(c.Query("pageNum"))
-	data := service.GetAllRegUserInfo(pageSize, pageNum)
+	data := service.GetAllCategory(pageSize, pageNum)
 	c.JSON(http.StatusOK, gin.H{
 		"status":  result.SUCCSE,
 		"data":    data,
@@ -46,12 +48,12 @@ func QueryAllUserInfo(c *gin.Context) {
 	})
 }
 
-func SetUserName(c *gin.Context) {
+func ReNameCategory(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-
-	var condition model.RegUser
-	_ = c.ShouldBind(&condition)
-	code = service.SetUser(uint(id), condition)
+	newName := c.Param("name")
+	var condition model.Category
+	condition.Name = newName
+	code = service.SetCategory(uint(id), condition)
 	if code == result.ERROR_USER_NOT_FOUND {
 		code = result.ERROR_USER_NOT_FOUND
 	}
