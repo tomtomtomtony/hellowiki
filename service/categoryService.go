@@ -5,9 +5,30 @@ import (
 	"hellowiki/model"
 )
 
-func CreateCategory(category *model.Category) (code int) {
+// 创建根分类
+func CreateRootCategory(categoryName string) (code int) {
+	var data model.Category
+	data.Name = categoryName
+	data.ParentId = 0
+	data.ParentName = categoryName
+	data.Level = 0
+	codeInsert := model.CreateCategory(data)
+	if codeInsert != 200 {
+		return codeInsert
+	}
+	return codeInsert
+}
 
-	codeInsert := model.CreateCategory(category)
+// 创建非根分类
+func CreateNonRootCategory(categoryInfo model.Category) (code int) {
+	var data model.Category
+	data.Name = categoryInfo.Name
+	if model.HasCategoryById(categoryInfo.ParentId) == 200 {
+		return result.ERROR_CATEGORY_NOT_FOUND
+	}
+	data.ParentId = categoryInfo.ParentId
+	data.ParentName = categoryInfo.ParentName
+	codeInsert := model.CreateCategory(data)
 	if codeInsert != 200 {
 		return codeInsert
 	}

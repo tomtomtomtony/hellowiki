@@ -34,7 +34,7 @@ func HasCategoryById(id uint) (code int) {
 }
 
 // 新增分类数据
-func CreateCategory(data *Category) (code int) {
+func CreateCategory(data Category) (code int) {
 	err := Db.Create(&data).Error
 	if err != nil {
 		return result.ERROR

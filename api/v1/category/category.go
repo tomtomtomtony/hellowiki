@@ -11,14 +11,16 @@ import (
 
 var code int
 
-// 创建根分类
+// 创建分类
 func CreateCategory(c *gin.Context) {
 	var category model.Category
 	_ = c.ShouldBind(&category)
-	code = service.CreateCategory(&category)
-	if code == result.ERROR_CATEGORY_EXIST {
-		code = result.ERROR_CATEGORY_EXIST
+	if category.ParentId == 0 {
+		code = service.CreateRootCategory(category.Name)
+	} else {
+		code = service.CreateNonRootCategory(category)
 	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  code,
 		"data":    category,
