@@ -8,10 +8,16 @@ import (
 // 创建根分类
 func CreateRootCategory(categoryName string) (code int) {
 	var data model.Category
+	//查询顶级父类
+	children := model.FindCategoryChildren(0)
+	for _, curr := range children {
+		if curr.Name == categoryName {
+			return result.ERROR_CATEGORY_EXIST
+		}
+	}
 	data.Name = categoryName
 	data.ParentId = 0
 	data.ParentName = categoryName
-	data.Level = 0
 	codeInsert := model.CreateCategory(data)
 	if codeInsert != 200 {
 		return codeInsert
@@ -42,36 +48,25 @@ func GetAllCategory(pageSize int, pageNum int) []model.Category {
 func DeleteCategory(category model.Category) int {
 	children := model.FindCategoryChildren(category.ID)
 	var newData model.Category
-	//1.若被删除节点为根节点
-	if category.ID == category.ParentId {
-		tx := model.Db.Begin()
-		//1.1更新每个孩子节点的父节点Id和名称
-		for _, curr := range children {
-			newData.ParentId, newData.ParentName = curr.ID, curr.Name
-			tx.Model(&model.Category{}).Where("id=?", curr.ID).Updates(newData)
-		} //1.2删除节点本身
-		tx.Delete(&model.Category{}, "id=?", category.ID)
-		err := tx.Rollback()
-		if err != nil {
-			return result.ERROR
-		}
-		tx.Commit()
-		return result.SUCCSE
-		//2.若为非根节点
-	} else {
-		tx := model.Db.Begin()
-		//2.1更新每个孩子节点的父节点Id和名称为待删除节点的父节点Id和名称
-		for _, curr := range children {
+	tx := model.Db.Begin()
+	//1.更新每个孩子节点的父节点Id和名称
+	for _, curr := range children {
+		//若为待删节点为根节点，其直接子节点将成为顶级父节点
+		if category.ParentId == 0 {
+			newData.ParentId, newData.ParentName = 0, curr.Name
+		} else {
 			newData.ParentId, newData.ParentName = category.ParentId, category.ParentName
-			tx.Model(&model.Category{}).Where("id=?", curr.ID).Updates(newData)
-		} //2.2删除节点本身
-		tx.Delete(&model.Category{}, "id=?", category.ID)
-		err := tx.Rollback()
-		if err != nil {
+		}
+		if err := tx.Model(&model.Category{}).Where("id=?", curr.ID).Updates(newData).Error; err != nil {
+			tx.Rollback()
 			return result.ERROR
 		}
-		tx.Commit()
+	} //2删除节点本身
+	if err := tx.Delete(&model.Category{}, "id=?", category.ID).Error; err != nil {
+		tx.Rollback()
+		return result.ERROR
 	}
+	tx.Commit()
 	return result.SUCCSE
 }
 

@@ -22,6 +22,7 @@ func InitDB() {
 			return time.Now()
 		},
 	})
+	Db.Set("gorm:table_options", "AUTO_INCREMENT=1")
 	if err != nil {
 		panic("fail to connect database")
 	}

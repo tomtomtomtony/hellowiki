@@ -5,7 +5,6 @@ import (
 	"hellowiki/common/result"
 	"hellowiki/model"
 	"hellowiki/service"
-	"net/http"
 	"strconv"
 )
 
@@ -20,22 +19,23 @@ func CreateCategory(c *gin.Context) {
 	} else {
 		code = service.CreateNonRootCategory(category)
 	}
+	result.RestFulResult(c, code)
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"data":    category,
-		"message": result.GetErrMsg(code),
-	})
 }
 
+/*
+*
+删除指定节点，若为叶子节点，或为非叶子但为根节点，需提供该节点ID,
+若为非叶子节点且为非根，需提供该节点的Id，ParentId，ParentName作为入参
+*/
 func DeleteCategory(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
 	var category model.Category
+	category.ID = uint(id)
 	_ = c.ShouldBind(&category)
 	code := service.DeleteCategory(category)
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"message": result.GetErrMsg(code),
-	})
+	result.RestFulResult(c, code)
+
 }
 
 func QueryAllCategory(c *gin.Context) {
@@ -43,24 +43,17 @@ func QueryAllCategory(c *gin.Context) {
 	pageSize, _ = strconv.Atoi(c.Query("pageSize"))
 	pageNum, _ = strconv.Atoi(c.Query("pageNum"))
 	data := service.GetAllCategory(pageSize, pageNum)
-	c.JSON(http.StatusOK, gin.H{
-		"status":  result.SUCCSE,
-		"data":    data,
-		"message": result.GetErrMsg(code),
-	})
+	if data == nil {
+		result.RestFulResult(c, result.ERROR)
+		return
+	}
+	result.RestFulResult(c, result.SUCCSE, data)
 }
 
 func ReNameCategory(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	newName := c.Param("name")
 	var condition model.Category
-	condition.Name = newName
+	_ = c.ShouldBind(&condition)
 	code = service.SetCategory(uint(id), condition)
-	if code == result.ERROR_USER_NOT_FOUND {
-		code = result.ERROR_USER_NOT_FOUND
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"message": result.GetErrMsg(code),
-	})
+	result.RestFulResult(c, code)
 }

@@ -13,9 +13,10 @@ type Category struct {
 	ParentName string `gorm:"type:varchar(40);not null" json:"parentName"`
 }
 
+// 顶级父类id为0
 func FindCategoryChildren(id uint) []Category {
 	var categories []Category
-	err := Db.Limit(500).Where("parentId=?", id).Find(&categories).Error
+	err := Db.Limit(500).Where("parent_id=?", id).Find(&categories).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return []Category{}
 	}
@@ -72,7 +73,7 @@ func UpdateCategoryById(id uint, category Category) int {
 
 // 根据parentId批量更新
 func UpdateCategoryBulkByParentId(parentId uint, category Category) (int, error) {
-	err := Db.Model(&category).Where("parentId=?", parentId).Updates(category).Error
+	err := Db.Model(&category).Where("parent_id=?", parentId).Updates(category).Error
 	if err != nil {
 		return result.ERROR, err
 	}
