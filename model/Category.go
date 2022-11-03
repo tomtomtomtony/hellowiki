@@ -13,6 +13,11 @@ type Category struct {
 	ParentName string `gorm:"type:varchar(40);not null" json:"parentName"`
 }
 
+var (
+	//顶级父类的parentId
+	TOPLEVELCATEGORY uint = 0
+)
+
 // 顶级父类id为0
 func FindCategoryChildren(id uint) []Category {
 	var categories []Category

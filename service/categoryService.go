@@ -9,17 +9,17 @@ import (
 func CreateRootCategory(categoryName string) (code int) {
 	var data model.Category
 	//查询顶级父类
-	children := model.FindCategoryChildren(0)
+	children := model.FindCategoryChildren(model.TOPLEVELCATEGORY)
 	for _, curr := range children {
 		if curr.Name == categoryName {
 			return result.ERROR_CATEGORY_EXIST
 		}
 	}
 	data.Name = categoryName
-	data.ParentId = 0
+	data.ParentId = model.TOPLEVELCATEGORY
 	data.ParentName = categoryName
 	codeInsert := model.CreateCategory(data)
-	if codeInsert != 200 {
+	if codeInsert != result.SUCCSE {
 		return codeInsert
 	}
 	return codeInsert
@@ -29,13 +29,13 @@ func CreateRootCategory(categoryName string) (code int) {
 func CreateNonRootCategory(categoryInfo model.Category) (code int) {
 	var data model.Category
 	data.Name = categoryInfo.Name
-	if model.HasCategoryById(categoryInfo.ParentId) == 200 {
+	if model.HasCategoryById(categoryInfo.ParentId) == result.SUCCSE {
 		return result.ERROR_CATEGORY_NOT_FOUND
 	}
 	data.ParentId = categoryInfo.ParentId
 	data.ParentName = categoryInfo.ParentName
 	codeInsert := model.CreateCategory(data)
-	if codeInsert != 200 {
+	if codeInsert != result.SUCCSE {
 		return codeInsert
 	}
 	return codeInsert
@@ -52,8 +52,8 @@ func DeleteCategory(category model.Category) int {
 	//1.更新每个孩子节点的父节点Id和名称
 	for _, curr := range children {
 		//若为待删节点为根节点，其直接子节点将成为顶级父节点
-		if category.ParentId == 0 {
-			newData.ParentId, newData.ParentName = 0, curr.Name
+		if category.ParentId == model.TOPLEVELCATEGORY {
+			newData.ParentId, newData.ParentName = model.TOPLEVELCATEGORY, curr.Name
 		} else {
 			newData.ParentId, newData.ParentName = category.ParentId, category.ParentName
 		}
@@ -71,7 +71,7 @@ func DeleteCategory(category model.Category) int {
 }
 
 func SetCategory(id uint, data model.Category) int {
-	if model.HasCategoryById(id) == 200 {
+	if model.HasCategoryById(id) == result.SUCCSE {
 		return result.ERROR_CATEGORY_NOT_FOUND
 	}
 	return model.UpdateCategoryById(id, data)
