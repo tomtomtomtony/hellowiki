@@ -71,8 +71,8 @@ func UpdateCategoryById(id uint, category Category) int {
 	return result.SUCCSE
 }
 
-// 根据parentId批量更新
-func UpdateCategoryBulkByParentId(parentId uint, category Category) (int, error) {
+// 根据parentId更新
+func UpdateCategoryByParentId(parentId uint, category Category) (int, error) {
 	err := Db.Model(&category).Where("parent_id=?", parentId).Updates(category).Error
 	if err != nil {
 		return result.ERROR, err
