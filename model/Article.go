@@ -7,14 +7,14 @@ import (
 )
 
 type Article struct {
-	Category Category
 	gorm.Model
-	Title     string `gorm:"type:varchar(100);not null" json:"title"`
-	Content   string `gorm:"type:longtext" json:"content"`
-	Img       string `gorm:"type:varchar(255)" json:"img"`
-	Desc      string `gorm:"type:varchar(255);" json:"desc"`
-	Tag       string `gorm:"type:varchar(255);" json:"tag"`
-	tableName string `gorm:"-"`
+	Category   Category `gorm:"-" json:"category"`
+	Title      string   `gorm:"type:varchar(100);not null" json:"title"`
+	Content    string   `gorm:"type:longtext" json:"content"`
+	Img        string   `gorm:"type:varchar(255)" json:"img"`
+	Desc       string   `gorm:"type:varchar(255)" json:"desc"`
+	Tag        string   `gorm:"type:varchar(255)" json:"tag"`
+	CategoryId uint     `gorm:"type:int;not null" json:"categoryId"`
 }
 
 var (
@@ -22,14 +22,13 @@ var (
 )
 
 func (article *Article) TableName() string {
-	if article.tableName != "" {
-		return article.tableName + common.UNDER_SCORE + string(article.Category.ID)
+	if article.Category.Name != "" {
+		return article.Category.Name + common.UNDER_SCORE + string(article.Category.ID)
 	}
 	return UNCLASSIFIED_ARTICLES
 }
 
 func CreateArticle(article Article, inputTBName string) int {
-	Db.AutoMigrate(article)
 	var err error
 	if len(inputTBName) != 0 {
 		err = Db.Table(inputTBName).Create(article).Error

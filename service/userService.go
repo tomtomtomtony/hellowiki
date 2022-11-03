@@ -9,13 +9,13 @@ import (
 
 func CreateUser(userInfo *model.RegUser) (code int) {
 	codeHas := model.HasUserByName(userInfo.UserName)
-	if codeHas != 200 {
+	if codeHas != result.SUCCSE {
 		return codeHas
 	}
 	//密码加密
 	userInfo.PassWord = pswCrypt(userInfo.PassWord)
 	codeInsert := model.CreateUser(userInfo)
-	if codeInsert != 200 {
+	if codeInsert != result.SUCCSE {
 		return codeInsert
 	}
 	return codeInsert
@@ -39,7 +39,7 @@ func pswCrypt(password string) string {
 }
 
 func SetUser(id uint, condition model.RegUser) int {
-	if model.HasUserById(id) == 200 {
+	if model.HasUserById(id) == result.SUCCSE {
 		return result.ERROR_USER_NOT_FOUND
 	}
 	return model.UpdateUserById(id, condition)

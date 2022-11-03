@@ -14,11 +14,7 @@ var code int
 func CreateCategory(c *gin.Context) {
 	var category model.Category
 	_ = c.ShouldBind(&category)
-	if category.ParentId == 0 {
-		code = service.CreateRootCategory(category.Name)
-	} else {
-		code = service.CreateNonRootCategory(category)
-	}
+	code = service.CreateCategory(category)
 	result.RestFulResult(c, code)
 
 }

@@ -5,6 +5,15 @@ import (
 	"hellowiki/model"
 )
 
+func CreateCategory(category model.Category) (code int) {
+	if category.ParentId == model.TOPLEVELCATEGORY {
+		code = CreateRootCategory(category.Name)
+	} else {
+		code = CreateNonRootCategory(category)
+	}
+	return code
+}
+
 // 创建根分类
 func CreateRootCategory(categoryName string) (code int) {
 	var data model.Category
