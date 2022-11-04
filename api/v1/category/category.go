@@ -21,8 +21,7 @@ func CreateCategory(c *gin.Context) {
 
 /*
 *
-删除指定节点，若为叶子节点，或为非叶子但为根节点，需提供该节点ID,
-若为非叶子节点且为非根，需提供该节点的Id，ParentId，ParentName作为入参
+删除指定分类，需要提供分类的id,parentId,parentName,engName
 */
 func DeleteCategory(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))

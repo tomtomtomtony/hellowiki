@@ -5,7 +5,6 @@ import (
 	"hellowiki/common/result"
 	"hellowiki/model"
 	"hellowiki/service"
-	"net/http"
 	"strconv"
 )
 
@@ -25,10 +24,7 @@ func Register(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	code := service.DeleteUser(id)
-	c.JSON(http.StatusOK, gin.H{
-		"status":  code,
-		"message": result.GetMsg(code),
-	})
+	result.RestFulResult(c, code)
 }
 
 func QueryAllUserInfo(c *gin.Context) {
@@ -36,11 +32,7 @@ func QueryAllUserInfo(c *gin.Context) {
 	pageSize, _ = strconv.Atoi(c.Query("pageSize"))
 	pageNum, _ = strconv.Atoi(c.Query("pageNum"))
 	data := service.GetAllRegUserInfo(pageSize, pageNum)
-	c.JSON(http.StatusOK, gin.H{
-		"status":  result.SUCCSE,
-		"data":    data,
-		"message": result.GetMsg(code),
-	})
+	result.RestFulResult(c, result.SUCCSE, data)
 }
 
 func SetUserName(c *gin.Context) {

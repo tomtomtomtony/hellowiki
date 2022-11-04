@@ -38,3 +38,12 @@ func CreateArticle(article Article, inputTBName string) int {
 	return result.SUCCSE
 
 }
+
+func GetAllInTable(pageSize int, pageNum int, tableName string) []Article {
+	var article []Article
+	err := Db.Table(tableName).Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&article).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return []Article{}
+	}
+	return article
+}

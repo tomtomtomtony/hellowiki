@@ -33,7 +33,6 @@ func CreateCategory(category model.Category) (code int) {
 	}
 	tx.Commit()
 	return result.SUCCSE
-	return code
 }
 
 func handleCreateRootCategory(categoryInfo model.Category) int {
@@ -63,7 +62,7 @@ func DeleteCategory(category model.Category) int {
 	tx := model.Db.Begin()
 	//1.更新每个孩子节点的父节点Id和名称
 	for _, curr := range children {
-		//若为待删节点为根节点，其直接子节点将成为顶级父节点
+		//1.1若为待删节点为根节点，其直接子节点将成为顶级父节点
 		if category.ParentId == model.TOPLEVELCATEGORY {
 			newData.ParentId, newData.ParentName = model.TOPLEVELCATEGORY, curr.Name
 		} else {
@@ -73,11 +72,13 @@ func DeleteCategory(category model.Category) int {
 			tx.Rollback()
 			return result.ERROR
 		}
-	} //2删除节点本身
+	} //2.删除节点本身
 	if err := tx.Delete(&model.Category{}, "id=?", category.ID).Error; err != nil {
 		tx.Rollback()
 		return result.ERROR
 	}
+	//3.若分类下没有文章，则对应的表也删除
+
 	tx.Commit()
 	return result.SUCCSE
 }
