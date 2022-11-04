@@ -18,19 +18,24 @@ const (
 	ERROR_USER_NOT_FOUND = 1003
 
 	//分类模块错误
-	ERROR_CATEGORY_EXIST            = 2001
-	ERROR_CATEGORY_NOT_FOUND        = 2002
-	ERROR_PARENT_CATEGORY_NOT_FOUND = 2003
+	ERROR_CATEGORY_EXIST                   = 2001
+	ERROR_CATEGORY_NOT_FOUND               = 2002
+	ERROR_PARENT_CATEGORY_NOT_FOUND        = 2003
+	ERROR_ARTICLE_DATABASE_TABLE_NOT_FOUND = 2004
+
+	//文章模块
+
 )
 
 var codeMsg = map[int]string{
-	SUCCSE:                          "OK",
-	ERROR:                           "FAIL",
-	ERROR_USERNAME_USED:             "用户已存在",
-	ERROR_USER_NOT_FOUND:            "用户不存在",
-	ERROR_CATEGORY_EXIST:            "该分类已存在",
-	ERROR_CATEGORY_NOT_FOUND:        "该分类不存在",
-	ERROR_PARENT_CATEGORY_NOT_FOUND: "指定的上级菜单不存在",
+	SUCCSE:                                 "OK",
+	ERROR:                                  "FAIL",
+	ERROR_USERNAME_USED:                    "用户已存在",
+	ERROR_USER_NOT_FOUND:                   "用户不存在",
+	ERROR_CATEGORY_EXIST:                   "该分类已存在",
+	ERROR_CATEGORY_NOT_FOUND:               "该分类不存在",
+	ERROR_PARENT_CATEGORY_NOT_FOUND:        "指定的上级菜单不存在",
+	ERROR_ARTICLE_DATABASE_TABLE_NOT_FOUND: "数据库错误:分类存储表未找到",
 }
 
 func GetMsg(code int) string {

@@ -29,15 +29,17 @@ func FindCategoryChildren(id uint) []Category {
 	return categories
 }
 
-func HasCategoryById(id uint) (code int) {
+func GetCategoryById(id uint) Category {
 	var category Category
-	Db.Take(&category, "id=?", id)
-	if category.ID > 0 {
-		//分类已存在
-		return result.ERROR_CATEGORY_EXIST
+	err := Db.Take(&category, "id=?", id).Error
+	if err != nil {
+		return Category{}
 	}
-	//分类不存在
-	return result.SUCCSE
+	return category
+}
+
+func HasCategoryTable(tableName string) bool {
+	return Db.Migrator().HasTable(tableName)
 }
 
 // 新增分类数据

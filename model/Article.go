@@ -7,14 +7,13 @@ import (
 
 type Article struct {
 	gorm.Model
-	Category   Category `gorm:"-" json:"category"`
-	Title      string   `gorm:"type:varchar(100);not null" json:"title"`
-	Content    string   `gorm:"type:longtext" json:"content"`
-	Img        string   `gorm:"type:varchar(255)" json:"img"`
-	Desc       string   `gorm:"type:varchar(255)" json:"desc"`
-	Tag        string   `gorm:"type:varchar(255)" json:"tag"`
-	CategoryId uint     `gorm:"type:int;not null" json:"categoryId"`
-	tableName  string   `gorm:"-"`
+	Category  Category `gorm:"-" json:"category"`
+	Title     string   `gorm:"type:varchar(100);not null" json:"title"`
+	Content   string   `gorm:"type:longtext" json:"content"`
+	Img       string   `gorm:"type:varchar(255)" json:"img"`
+	Desc      string   `gorm:"type:varchar(255)" json:"desc"`
+	Tag       string   `gorm:"type:varchar(255)" json:"tag"`
+	tableName string   `gorm:"-"`
 }
 
 var (

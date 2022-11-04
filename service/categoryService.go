@@ -46,7 +46,7 @@ func handleCreateRootCategory(categoryInfo model.Category) int {
 }
 
 func handleCreateNonRootCategory(categoryInfo model.Category) int {
-	if model.HasCategoryById(categoryInfo.ParentId) == result.SUCCSE {
+	if !HasCategory(categoryInfo.ID) {
 		return result.ERROR_CATEGORY_NOT_FOUND
 	}
 	return result.SUCCSE
@@ -84,8 +84,22 @@ func DeleteCategory(category model.Category) int {
 }
 
 func SetCategory(id uint, data model.Category) int {
-	if model.HasCategoryById(id) == result.SUCCSE {
+	if !HasCategory(id) {
 		return result.ERROR_CATEGORY_NOT_FOUND
 	}
 	return model.UpdateCategoryById(id, data)
+}
+
+func HasCategory(id uint) bool {
+	return model.GetCategoryById(id) != model.Category{}
+}
+
+//func repairTable(categoryId uint) int {
+//	var category model.Category
+//	category = model.GetCategoryById(categoryId)
+//
+//}
+
+func ConstructStandardTableName(categoryEngName string, categoryId uint) string {
+	return categoryEngName + common.UNDER_SCORE + strconv.Itoa(int(categoryId))
 }

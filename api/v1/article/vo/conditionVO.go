@@ -1,13 +1,12 @@
 package vo
 
-import "gorm.io/gorm"
-
 type ConditionVO struct {
-	gorm.Model
-	Name       string `gorm:"-" json:"name"`
-	EngName    string `gorm:"-" json:"engName"`
-	ParentId   uint   `gorm:"-" json:"parentId"`
-	ParentName string `gorm:"-" json:"parentName"`
-	PageSize   int    `gorm:"-" json:"pageSize"`
-	PageNum    int    `gorm:"-" json:"pageNum"`
+	ArticleId       uint   `json:"articleId"`
+	CategoryId      uint   `json:"categoryId"`
+	CategoryName    string `json:"categoryName"`
+	CategoryEngName string `json:"categoryEngName"`
+	ArticleTitle    string `json:"articleTitle"`
+	ArticleContent  string `json:"articleContent"`
+	PageSize        int    `json:"pageSize"`
+	PageNum         int    `json:"pageNum"`
 }

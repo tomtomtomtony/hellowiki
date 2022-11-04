@@ -52,3 +52,8 @@ func ReNameCategory(c *gin.Context) {
 	code = service.SetCategory(uint(id), condition)
 	result.RestFulResult(c, code)
 }
+
+// 重建对应分类的数据库表。用于分类存在，但数据库对应分类文章表损坏的情况
+func repairTable(c *gin.Context) {
+
+}
