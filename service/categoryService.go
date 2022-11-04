@@ -1,53 +1,56 @@
 package service
 
 import (
+	"hellowiki/common"
 	"hellowiki/common/result"
 	"hellowiki/model"
+	"strconv"
 )
 
 func CreateCategory(category model.Category) (code int) {
+	var data model.Category
 	if category.ParentId == model.TOPLEVELCATEGORY {
-		code = CreateRootCategory(category.Name)
+		code = handleCreateRootCategory(category)
 	} else {
-		code = CreateNonRootCategory(category)
+		code = handleCreateNonRootCategory(category)
 	}
+	if code != result.SUCCSE {
+		return result.ERROR
+	}
+	data.Name = category.Name
+	data.ParentId = model.TOPLEVELCATEGORY
+	data.ParentName = category.Name
+	data.EngName = category.EngName
+	tx := model.Db.Begin()
+	if err := tx.Create(&data).Error; err != nil {
+		tx.Rollback()
+		return result.ERROR
+	}
+	tableName := data.EngName + common.UNDER_SCORE + strconv.Itoa(int(data.ID))
+	if err := tx.Table(tableName).AutoMigrate(&model.Article{}); err != nil {
+		tx.Rollback()
+		return result.ERROR
+	}
+	tx.Commit()
+	return result.SUCCSE
 	return code
 }
 
-// 创建根分类
-func CreateRootCategory(categoryName string) (code int) {
-	var data model.Category
-	//查询顶级父类
+func handleCreateRootCategory(categoryInfo model.Category) int {
 	children := model.FindCategoryChildren(model.TOPLEVELCATEGORY)
 	for _, curr := range children {
-		if curr.Name == categoryName {
+		if curr.Name == categoryInfo.Name {
 			return result.ERROR_CATEGORY_EXIST
 		}
 	}
-	data.Name = categoryName
-	data.ParentId = model.TOPLEVELCATEGORY
-	data.ParentName = categoryName
-	codeInsert := model.CreateCategory(data)
-	if codeInsert != result.SUCCSE {
-		return codeInsert
-	}
-	return codeInsert
+	return result.SUCCSE
 }
 
-// 创建非根分类
-func CreateNonRootCategory(categoryInfo model.Category) (code int) {
-	var data model.Category
-	data.Name = categoryInfo.Name
+func handleCreateNonRootCategory(categoryInfo model.Category) int {
 	if model.HasCategoryById(categoryInfo.ParentId) == result.SUCCSE {
 		return result.ERROR_CATEGORY_NOT_FOUND
 	}
-	data.ParentId = categoryInfo.ParentId
-	data.ParentName = categoryInfo.ParentName
-	codeInsert := model.CreateCategory(data)
-	if codeInsert != result.SUCCSE {
-		return codeInsert
-	}
-	return codeInsert
+	return result.SUCCSE
 }
 
 func GetAllCategory(pageSize int, pageNum int) []model.Category {

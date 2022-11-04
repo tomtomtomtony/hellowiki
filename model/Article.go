@@ -2,7 +2,6 @@ package model
 
 import (
 	"gorm.io/gorm"
-	"hellowiki/common"
 	"hellowiki/common/result"
 )
 
@@ -15,6 +14,7 @@ type Article struct {
 	Desc       string   `gorm:"type:varchar(255)" json:"desc"`
 	Tag        string   `gorm:"type:varchar(255)" json:"tag"`
 	CategoryId uint     `gorm:"type:int;not null" json:"categoryId"`
+	tableName  string   `gorm:"-"`
 }
 
 var (
@@ -22,16 +22,13 @@ var (
 )
 
 func (article *Article) TableName() string {
-	if article.Category.Name != "" {
-		return article.Category.Name + common.UNDER_SCORE + string(article.Category.ID)
-	}
 	return UNCLASSIFIED_ARTICLES
 }
 
 func CreateArticle(article Article, inputTBName string) int {
 	var err error
 	if len(inputTBName) != 0 {
-		err = Db.Table(inputTBName).Create(article).Error
+		err = Db.Table(inputTBName).Create(&article).Error
 	} else {
 		err = Db.Table(UNCLASSIFIED_ARTICLES).Create(article).Error
 	}

@@ -9,6 +9,7 @@ import (
 type Category struct {
 	gorm.Model
 	Name       string `gorm:"type:varchar(40);not null" json:"name"`
+	EngName    string `gorm:"type:varchar(40);not null"json:"engName"`
 	ParentId   uint   `gorm:"type:int;not null" json:"parentId"`
 	ParentName string `gorm:"type:varchar(40);not null" json:"parentName"`
 }
