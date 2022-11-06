@@ -8,14 +8,33 @@ import (
 
 type tomlConfig struct {
 	DataBase dataBase
+	SearchDB searchDB
+	DirDB    dirDB
 	WikiInfo wikiInfo
 	Server   server
+	Analyze  analyze
 }
 
 type dataBase struct {
 	userName string
 	password string
 	Location string
+}
+
+type searchDB struct {
+	Location      string
+	DefaultIndex  string
+	IndexPathName string
+}
+
+type dirDB struct {
+	Location    string
+	DefaultDir  string
+	TxtPathName string
+}
+
+type analyze struct {
+	Dict string
 }
 
 type wikiInfo struct {
@@ -37,7 +56,6 @@ func init() {
 	viper.AddConfigPath("./config") //搜索路径可以设置多个，viper 会根据设置顺序依次查找
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalf("read config failed: %v", err)
-		return
 	}
 	//输出读取到的值
 	//2.获取所有值
@@ -46,7 +64,6 @@ func init() {
 	err := viper.Unmarshal(&Cfg)
 	if err != nil {
 		log.Fatalf(err.Error())
-		return
 	}
 
 }

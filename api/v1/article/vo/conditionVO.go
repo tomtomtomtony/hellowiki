@@ -1,7 +1,7 @@
 package vo
 
 type ConditionVO struct {
-	ArticleId       uint   `json:"articleId"`
+	ArticleId       uint   `json:"articleId" `
 	CategoryId      uint   `json:"categoryId"`
 	CategoryName    string `json:"categoryName"`
 	CategoryEngName string `json:"categoryEngName"`

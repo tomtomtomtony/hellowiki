@@ -2,6 +2,7 @@ package category
 
 import (
 	"github.com/gin-gonic/gin"
+	"hellowiki/api/v1/category/vo"
 	"hellowiki/common/result"
 	"hellowiki/model"
 	"hellowiki/service"
@@ -12,11 +13,10 @@ var code int
 
 // 创建分类
 func CreateCategory(c *gin.Context) {
-	var category model.Category
-	_ = c.ShouldBind(&category)
-	code = service.CreateCategory(category)
+	var condition vo.ConditionVO
+	_ = c.ShouldBind(&condition)
+	code = service.CreateCategory(condition)
 	result.RestFulResult(c, code)
-
 }
 
 /*

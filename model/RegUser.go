@@ -13,7 +13,7 @@ type RegUser struct {
 
 func HasUserById(id uint) (code int) {
 	var regUser RegUser
-	Db.Take(&regUser, "id=?", id)
+	DbBase.Take(&regUser, "id=?", id)
 	if regUser.ID > 0 {
 		//用户已存在
 		return result.ERROR_USERNAME_USED
@@ -24,7 +24,7 @@ func HasUserById(id uint) (code int) {
 
 func HasUserByName(userName string) (code int) {
 	var regUser RegUser
-	Db.Take(&regUser, "user_name=?", userName)
+	DbBase.Take(&regUser, "user_name=?", userName)
 	if regUser.ID > 0 {
 		//用户已存在
 		return result.ERROR_USERNAME_USED
@@ -35,7 +35,7 @@ func HasUserByName(userName string) (code int) {
 
 // 插入用户数据
 func CreateUser(data *RegUser) (code int) {
-	err := Db.Create(&data).Error
+	err := DbBase.Create(&data).Error
 	if err != nil {
 		return result.ERROR
 	}
@@ -45,7 +45,7 @@ func CreateUser(data *RegUser) (code int) {
 // 查询用户列表
 func FindAllUser(pageSize int, pageNum int) []RegUser {
 	var users []RegUser
-	err := Db.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&users).Error
+	err := DbBase.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&users).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return []RegUser{}
 	}
@@ -54,7 +54,7 @@ func FindAllUser(pageSize int, pageNum int) []RegUser {
 
 // 根据id，软删除用户信息
 func DeleteUserById(id int) int {
-	err := Db.Delete(&RegUser{}, "id=?", id).Error
+	err := DbBase.Delete(&RegUser{}, "id=?", id).Error
 	if err != nil {
 		return result.ERROR
 	}
@@ -63,7 +63,7 @@ func DeleteUserById(id int) int {
 
 // 根据id，更新用户信息
 func UpdateUserById(id uint, regUser RegUser) int {
-	err := Db.Model(&regUser).Where("id=?", id).Updates(regUser).Error
+	err := DbBase.Model(&regUser).Where("id=?", id).Updates(regUser).Error
 	if err != nil {
 		return result.ERROR
 	}
@@ -73,7 +73,7 @@ func UpdateUserById(id uint, regUser RegUser) int {
 // 按username查询
 //func FindByName(username string) RegUser {
 //	var regUser RegUser
-//	err := Db.Take(&regUser, "user_name=?", username).Error
+//	err := DbBase.Take(&regUser, "user_name=?", username).Error
 //	if err != nil && err != gorm.ErrRecordNotFound {
 //		return
 //	}

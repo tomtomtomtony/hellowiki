@@ -19,9 +19,5 @@ func GetAllInCategory(c *gin.Context) {
 	var condition vo.ConditionVO
 	_ = c.BindJSON(&condition)
 	data := service.QueryInCategory(condition)
-	if data == nil {
-		result.RestFulResult(c, result.ERROR)
-		return
-	}
 	result.RestFulResult(c, result.SUCCSE, data)
 }

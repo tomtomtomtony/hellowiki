@@ -21,7 +21,7 @@ const (
 	ERROR_CATEGORY_EXIST                   = 2001
 	ERROR_CATEGORY_NOT_FOUND               = 2002
 	ERROR_PARENT_CATEGORY_NOT_FOUND        = 2003
-	ERROR_ARTICLE_DATABASE_TABLE_NOT_FOUND = 2004
+	ERROR_ARTICLE_DATABASE_Index_NOT_FOUND = 2004
 
 	//文章模块
 
@@ -35,7 +35,7 @@ var codeMsg = map[int]string{
 	ERROR_CATEGORY_EXIST:                   "该分类已存在",
 	ERROR_CATEGORY_NOT_FOUND:               "该分类不存在",
 	ERROR_PARENT_CATEGORY_NOT_FOUND:        "指定的上级菜单不存在",
-	ERROR_ARTICLE_DATABASE_TABLE_NOT_FOUND: "数据库错误:分类存储表未找到",
+	ERROR_ARTICLE_DATABASE_Index_NOT_FOUND: "数据库错误:分类存储表未找到",
 }
 
 func GetMsg(code int) string {
