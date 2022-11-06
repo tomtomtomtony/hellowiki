@@ -1,15 +1,18 @@
 [wikiInfo]
 WikiName="helloWiki"
 [dataBase]
-Location="./data/db/hellowikiBase.db"
+Location="db"
+DefaultDBName="hellowikiBase.db"
 [searchDB]
-Location="./data/db/articles/index/"
+Location="index"
 DefaultIndex="unclassified_articles"
 [dirDB]
-Location="./data/db/articles/txt/"
+Location="content"
 DefaultDir="unclassified_articles"
 [server]
 AppMode="debug"
 Port=":8080"
 [analyze]
 Dict="embed, zh"
+[dataDir]
+Location="./data/"

@@ -8,7 +8,7 @@ import (
 
 func main() {
 	//初始化数据库
-	model.InitDB()
+	model.InitData()
 	//初始化路由
 	routers.InitRouter().Run(config.Cfg.Server.Port)
 

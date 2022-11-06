@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
+	"hellowiki/common/utils"
 	"hellowiki/config"
 	"hellowiki/service/search"
 	utils2 "hellowiki/service/utils"
@@ -17,8 +18,29 @@ import (
 var DbBase *gorm.DB
 var err error
 
-func InitDB() {
-	DbBase, err = gorm.Open(sqlite.Open(config.Cfg.DataBase.Location), &gorm.Config{
+func InitData() {
+	//初始化数据目录
+	check, err := utils.HasDirectory(config.Cfg.DataDir.Location)
+	if err != nil {
+		log.Fatalf("未能检查data文件夹:{%v}", err)
+	}
+	if !check {
+		os.Mkdir(config.Cfg.DataDir.Location, os.ModePerm)
+	}
+
+	//初始化数据库目录
+	config.Cfg.DataBase.AbsPath = config.Cfg.DataDir.Location + string(os.PathSeparator) + config.Cfg.DataBase.Location
+	check, err = utils.HasDirectory(config.Cfg.DataBase.AbsPath)
+	if err != nil {
+		log.Fatalf("未能检查data文件夹:{%v}", err)
+	}
+	if !check {
+		if err := os.Mkdir(config.Cfg.DataBase.AbsPath, os.ModePerm); err != nil {
+			log.Fatalf("创建db文件夹失败:{%v}", err)
+		}
+	}
+	//初始化数据库
+	DbBase, err = gorm.Open(sqlite.Open(config.Cfg.DataBase.AbsPath+string(os.PathSeparator)+config.Cfg.DataBase.DefaultDBName), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
@@ -27,30 +49,27 @@ func InitDB() {
 			return time.Now()
 		},
 	})
-	DbBase.Set("gorm:table_options", "AUTO_INCREMENT=1")
 	if err != nil {
-		panic("fail to connect database")
+		log.Fatalf("fail to connect database:{%v}", err)
 	}
+	DbBase.Set("gorm:table_options", "AUTO_INCREMENT=1")
 	err = DbBase.AutoMigrate(&RegUser{}, &Category{})
 	if err != nil {
-		panic("建表失败")
+		log.Fatalf("建表失败")
 	}
 
 	//初始化索引目录
-	_, err = os.OpenFile(config.Cfg.SearchDB.Location, os.O_RDONLY, os.ModeDir)
+	config.Cfg.SearchDB.AbsPath = config.Cfg.DataDir.Location + string(os.PathSeparator) + config.Cfg.SearchDB.Location
+	check, err = utils.HasDirectory(config.Cfg.SearchDB.AbsPath)
 	if err != nil {
-		log.Printf("打开{%v}文件夹失败\n", config.Cfg.SearchDB.Location)
-		if err == os.ErrNotExist {
-			log.Printf("{%v}不存在\n", config.Cfg.SearchDB.Location)
-		}
-		err = os.Mkdir(config.Cfg.SearchDB.Location, os.ModePerm)
-		if err != nil {
-			panic("创建文章目录失败")
-		}
+		log.Fatalf("未能检查index文件夹:{%v}", err)
 	}
+	if !check {
+		os.Mkdir(config.Cfg.SearchDB.AbsPath, os.ModePerm)
+	}
+
 	//初始化索引
-	config.Cfg.SearchDB.IndexPathName = config.Cfg.SearchDB.Location + config.Cfg.SearchDB.DefaultIndex
-	_, err := bleve.Open(config.Cfg.SearchDB.IndexPathName)
+	_, err = bleve.Open(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + config.Cfg.SearchDB.DefaultIndex)
 	if err != nil {
 		if err != bleve.ErrorIndexPathDoesNotExist {
 			log.Fatalf("搜索索引失败")
@@ -67,13 +86,36 @@ func InitDB() {
 		}
 
 		articlesMapping := utils2.BuildArticleMapping(tokenOpt)
-		_, err = bleve.New(config.Cfg.SearchDB.IndexPathName, articlesMapping)
+		_, err = bleve.New(config.Cfg.SearchDB.AbsPath+string(os.PathSeparator)+config.Cfg.SearchDB.DefaultIndex, articlesMapping)
 		if err != nil {
 			log.Fatalf("创建索引失败", err)
 		}
 	}
 
-	//初始化txt存储目录
+	//初始化文章存储目录
+	config.Cfg.DirDB.AbsPath = config.Cfg.DataDir.Location + string(os.PathSeparator) + config.Cfg.DirDB.Location
+	check, err = utils.HasDirectory(config.Cfg.DirDB.AbsPath)
+	if err != nil {
+		log.Fatalf("未能检查index文件夹:{%v}", err)
+	}
+	if !check {
+		os.Mkdir(config.Cfg.DirDB.AbsPath, os.ModePerm)
+	}
+
+	//初始化默认文章目录
+	_, err = os.OpenFile(config.Cfg.DirDB.AbsPath+string(os.PathSeparator)+config.Cfg.DirDB.DefaultDir, os.O_RDONLY, os.ModeDir)
+	if err != nil {
+		if err != os.ErrNotExist {
+			log.Printf("目录{%v}不存在\n", config.Cfg.DirDB.AbsPath+string(os.PathSeparator)+config.Cfg.DirDB.DefaultDir)
+		}
+		err = os.Mkdir(config.Cfg.DirDB.AbsPath+string(os.PathSeparator)+config.Cfg.DirDB.DefaultDir, os.ModePerm)
+		if err != nil {
+			log.Fatalf("创建txt默认目录失败", err)
+		}
+	}
+}
+
+func initArticlesDir() {
 	_, err = os.OpenFile(config.Cfg.DirDB.Location, os.O_RDONLY, os.ModeDir)
 	if err != nil {
 		log.Printf("打开{%v}文件夹失败\n", config.Cfg.DirDB.Location)
@@ -82,20 +124,7 @@ func InitDB() {
 		}
 		err = os.Mkdir(config.Cfg.DirDB.Location, os.ModePerm)
 		if err != nil {
-			panic("创建文章目录失败")
-		}
-	}
-
-	//初始化默认txt目录
-	config.Cfg.DirDB.TxtPathName = config.Cfg.DirDB.Location + config.Cfg.DirDB.DefaultDir
-	_, err = os.OpenFile(config.Cfg.DirDB.TxtPathName, os.O_RDONLY, os.ModeDir)
-	if err != nil {
-		if err != os.ErrNotExist {
-			log.Printf("目录{%v}不存在\n", config.Cfg.DirDB.TxtPathName)
-		}
-		err = os.Mkdir(config.Cfg.DirDB.TxtPathName, os.ModePerm)
-		if err != nil {
-			log.Fatalf("创建txt默认目录{%v}失败", config.Cfg.DirDB.TxtPathName)
+			log.Fatalf("创建文章目录失败")
 		}
 	}
 }

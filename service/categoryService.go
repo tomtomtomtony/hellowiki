@@ -23,17 +23,17 @@ func CreateCategory(condition vo.ConditionVO) (code int) {
 		code = handleCreateNonRootCategory(condition)
 	}
 	if code != result.SUCCSE {
-		return result.ERROR
+		return code
 	}
 	data = vo2Do(condition)
 	//写入数据库
-	code = model.CreateCategory(data)
+	code, dataId := model.CreateCategory(data)
 	if code != result.SUCCSE {
 		log.Println("新增分类写入数据库失败")
 		return result.ERROR
 	}
 	//写入索引文件
-	indexName := ConstructStandardIndexName(data.EngName, data.ID)
+	indexName := ConstructStandardIndexName(data.EngName, dataId)
 	tokenOpt := map[string]interface{}{
 		"dicts":     config.Cfg.Analyze.Dict,
 		"stop":      "",
@@ -75,6 +75,7 @@ func handleCreateNonRootCategory(categoryInfo vo.ConditionVO) int {
 	if !HasCategory(categoryInfo.CategoryId) {
 		return result.ERROR_CATEGORY_NOT_FOUND
 	}
+
 	return result.SUCCSE
 }
 
@@ -122,7 +123,7 @@ func HasCategory(id uint) bool {
 
 // 传入索引名称符合格式: article的 engName_categoryId
 func HasArticleIndex(indexName string) bool {
-	return model.HasCategoryDir(indexName)
+	return model.HasCategoryIndex(indexName)
 }
 
 //func repairTable(categoryId uint) int {

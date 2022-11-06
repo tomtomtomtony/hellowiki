@@ -3,10 +3,12 @@ module hellowiki
 go 1.19
 
 require (
+	github.com/BurntSushi/toml v0.3.1
 	github.com/blevesearch/bleve/v2 v2.3.5
 	github.com/gin-gonic/gin v1.8.1
 	github.com/glebarez/sqlite v1.5.0
 	github.com/go-ego/gse v0.70.2
+	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/spf13/viper v1.13.0
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	gorm.io/gorm v1.24.0

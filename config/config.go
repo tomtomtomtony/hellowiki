@@ -13,24 +13,30 @@ type tomlConfig struct {
 	WikiInfo wikiInfo
 	Server   server
 	Analyze  analyze
+	DataDir  dataDir
 }
 
 type dataBase struct {
-	userName string
-	password string
+	userName      string
+	password      string
+	Location      string
+	AbsPath       string
+	DefaultDBName string
+}
+type dataDir struct {
 	Location string
 }
-
 type searchDB struct {
-	Location      string
-	DefaultIndex  string
-	IndexPathName string
+	Location     string
+	DefaultIndex string
+	AbsPath      string
 }
 
 type dirDB struct {
-	Location    string
-	DefaultDir  string
-	TxtPathName string
+	Location        string
+	DefaultDir      string
+	AbsPath         string
+	ContentPathName string
 }
 
 type analyze struct {

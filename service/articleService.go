@@ -20,12 +20,16 @@ func CreateArticle(condition vo.ConditionVO) int {
 	return model.CreateArticle(article, IndexName)
 }
 
-func QueryInCategory(condition vo.ConditionVO) bleve.SearchResult {
+func QueryInCategory(condition vo.ConditionVO) (bleve.SearchResult, int) {
 	tableName := ConstructStandardIndexName(condition.CategoryEngName, condition.CategoryId)
 	if !HasArticleIndex(tableName) {
-		return bleve.SearchResult{}
+		return bleve.SearchResult{}, result.ERROR
 	}
-	return model.GetAllInAIndex(condition.PageSize, condition.PageNum, tableName)
+	res, code := model.GetAllInAIndex(condition.PageSize, condition.PageNum, tableName)
+	if code != result.SUCCSE {
+		return bleve.SearchResult{}, code
+	}
+	return res, code
 }
 
 func voTDo(conditionVO vo.ConditionVO) model.Article {

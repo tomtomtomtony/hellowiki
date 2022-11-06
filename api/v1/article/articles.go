@@ -18,6 +18,9 @@ func CreateArticle(c *gin.Context) {
 func GetAllInCategory(c *gin.Context) {
 	var condition vo.ConditionVO
 	_ = c.BindJSON(&condition)
-	data := service.QueryInCategory(condition)
+	data, code := service.QueryInCategory(condition)
+	if code != result.SUCCSE {
+		result.RestFulResult(c, code)
+	}
 	result.RestFulResult(c, result.SUCCSE, data)
 }

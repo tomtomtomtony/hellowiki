@@ -4,6 +4,7 @@ import (
 	"gorm.io/gorm"
 	"hellowiki/common/result"
 	"hellowiki/config"
+	"log"
 	"os"
 )
 
@@ -26,6 +27,7 @@ func FindCategoryChildren(id uint) []Category {
 	var categories []Category
 	err := DbBase.Limit(500).Where("parent_id=?", id).Find(&categories).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
+		log.Printf("查找id为{%v}的直接子类时，出现错误:{%v}\n", id, err)
 		return []Category{}
 	}
 	return categories
@@ -40,7 +42,7 @@ func GetCategoryById(id uint) Category {
 	return category
 }
 
-func HasCategoryDir(indexName string) bool {
+func HasCategoryIndex(indexName string) bool {
 	_, err := os.OpenFile(config.Cfg.SearchDB.Location+indexName, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		return false
@@ -53,12 +55,12 @@ func HasCategoryTable(tableName string) bool {
 }
 
 // 新增分类数据
-func CreateCategory(data Category) (code int) {
+func CreateCategory(data Category) (code int, id uint) {
 	err := DbBase.Create(&data).Error
 	if err != nil {
-		return result.ERROR
+		return result.ERROR, 0
 	}
-	return result.SUCCSE
+	return result.SUCCSE, data.ID
 }
 
 // 查询分类列表
