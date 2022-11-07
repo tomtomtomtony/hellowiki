@@ -2,7 +2,7 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
-	"hellowiki/common/result"
+	"hellowiki/api/result"
 	"hellowiki/model"
 	"hellowiki/service"
 	"strconv"

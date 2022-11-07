@@ -5,11 +5,9 @@ import (
 	"hellowiki/api/v1/article"
 	"hellowiki/api/v1/category"
 	"hellowiki/api/v1/user"
-	"hellowiki/config"
 )
 
 func InitRouter() *gin.Engine {
-	gin.SetMode(config.Cfg.Server.AppMode)
 
 	r := gin.Default()
 	//用户模块

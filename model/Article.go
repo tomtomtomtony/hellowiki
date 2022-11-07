@@ -3,11 +3,10 @@ package model
 import (
 	"bufio"
 	"github.com/blevesearch/bleve/v2"
+	"hellowiki/api/result"
 	"hellowiki/common"
-	"hellowiki/common/result"
-	"hellowiki/common/utils"
 	"hellowiki/config"
-	"hellowiki/service/search"
+	utils2 "hellowiki/model/utils"
 	"log"
 	"os"
 	"strconv"
@@ -27,31 +26,29 @@ var (
 )
 
 func HasCategoryContent(contentName string) (bool, error) {
-	return utils.HasDirectory(contentName)
+	return utils2.HasDirectory(config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + contentName)
 }
 
 func CreateArticle(article Article, classifiedName string) int {
 
-	allIndexName := config.Cfg.SearchDB.Location + classifiedName
-
 	//写入索引
-	dbSearch, code := search.OpenIndex(allIndexName)
+	dbSearch, code := utils2.OpenIndex(classifiedName)
 	if code != result.SUCCSE {
 		return code
 	}
 	defer dbSearch.Close()
 	docId := article.Title + common.UNDER_SCORE + strconv.FormatInt(time.Now().Unix(), 10)
-	config.err = dbSearch.Index(docId, article)
-	if config.err != nil {
+	err := dbSearch.Index(docId, article)
+	if err != nil {
 		return result.ERROR
 	}
 
 	//写入磁盘
-	dirName := config.Cfg.DirDB.Location + classifiedName
+	dirName := config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + classifiedName
 	//检查分类文件夹是否存在
-	checkContentDir, err := HasCategoryContent(dirName)
+	checkContentDir, err := HasCategoryContent(classifiedName)
 	if !checkContentDir || err != nil {
-		log.Printf("写入磁盘错误，未能打开{%v}:{%v}\n", dirName, err)
+		log.Printf("写入磁盘错误，未能找到{%v}:{%v}\n", dirName, err)
 		return result.ERROR
 	}
 	contentPath := dirName + string(os.PathSeparator) + article.Title + common.UNDER_SCORE +
@@ -81,7 +78,7 @@ func CreateArticle(article Article, classifiedName string) int {
 func GetAllInAIndex(pageSize int, pageNum int, indexName string) (bleve.SearchResult, int) {
 
 	allIndexName := config.Cfg.SearchDB.Location + indexName
-	dbSearch, code := search.OpenIndex(allIndexName)
+	dbSearch, code := utils2.OpenIndex(allIndexName)
 	if code != result.SUCCSE {
 		return bleve.SearchResult{}, code
 	}

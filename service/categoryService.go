@@ -2,13 +2,13 @@ package service
 
 import (
 	"github.com/blevesearch/bleve/v2"
+	"hellowiki/api/result"
 	"hellowiki/api/v1/category/vo"
 	"hellowiki/common"
-	"hellowiki/common/result"
 	"hellowiki/config"
 	"hellowiki/model"
-	"hellowiki/service/search"
-	utils2 "hellowiki/service/utils"
+	"hellowiki/model/searchConfig"
+	utils2 "hellowiki/model/utils"
 	"log"
 	"os"
 	"strconv"
@@ -40,12 +40,11 @@ func CreateCategory(condition vo.ConditionVO) (code int) {
 		"opt":       "search-hmm",
 		"trim":      "trim",
 		"alpha":     false,
-		"type":      search.TokenName,
-		"tokenizer": search.TokenName,
+		"type":      searchConfig.TokenName,
+		"tokenizer": searchConfig.TokenName,
 	}
 	articlesMapping := utils2.BuildArticleMapping(tokenOpt)
-	index, err := bleve.New(config.Cfg.SearchDB.Location+indexName, articlesMapping)
-	defer index.Close()
+	index, err := bleve.New(config.Cfg.SearchDB.AbsPath+string(os.PathSeparator)+indexName, articlesMapping)
 	if err != nil {
 		log.Println("新增分类写入索引失败")
 		return result.ERROR
@@ -53,16 +52,20 @@ func CreateCategory(condition vo.ConditionVO) (code int) {
 
 	//写入磁盘文件夹
 	dirName := indexName
-	err = os.Mkdir(config.Cfg.DirDB.Location+dirName, os.ModePerm)
+	err = os.Mkdir(config.Cfg.DirDB.AbsPath+string(os.PathSeparator)+dirName, os.ModePerm)
 	if err != nil {
 		log.Println("新增分类写入磁盘失败")
 		return result.ERROR
 	}
+	if err := index.Close(); err != nil {
+		log.Fatalf("未能正确关闭文件")
+	}
+
 	return result.SUCCSE
 }
 
 func handleCreateRootCategory(categoryInfo vo.ConditionVO) int {
-	children := model.FindCategoryChildren(model.TOPLEVELCATEGORY)
+	children := model.FindDirectChildren(model.TOPLEVELCATEGORY)
 	for _, curr := range children {
 		if curr.Name == categoryInfo.Name {
 			return result.ERROR_CATEGORY_EXIST
@@ -72,10 +75,15 @@ func handleCreateRootCategory(categoryInfo vo.ConditionVO) int {
 }
 
 func handleCreateNonRootCategory(categoryInfo vo.ConditionVO) int {
-	if !HasCategory(categoryInfo.CategoryId) {
+	if !HasCategory(categoryInfo.ParentId) {
 		return result.ERROR_CATEGORY_NOT_FOUND
 	}
-
+	children := model.FindDirectChildren(categoryInfo.ParentId)
+	for _, curr := range children {
+		if curr.Name == categoryInfo.Name {
+			return result.ERROR_CATEGORY_EXIST
+		}
+	}
 	return result.SUCCSE
 }
 
@@ -84,9 +92,9 @@ func GetAllCategory(pageSize int, pageNum int) []model.Category {
 }
 
 func DeleteCategory(category model.Category) int {
-	children := model.FindCategoryChildren(category.ID)
+	children := model.FindDirectChildren(category.ID)
 	var newData model.Category
-	tx := config.DbBase.Begin()
+	tx := model.DbBase.Begin()
 	//1.更新每个孩子节点的父节点Id和名称
 	for _, curr := range children {
 		//1.1若为待删节点为根节点，其直接子节点将成为顶级父节点
@@ -123,7 +131,7 @@ func HasCategory(id uint) bool {
 
 // 传入索引名称符合格式: article的 engName_categoryId
 func HasArticleIndex(indexName string) bool {
-	return model.HasCategoryIndex(indexName)
+	return utils2.HasCategoryIndex(indexName)
 }
 
 //func repairTable(categoryId uint) int {

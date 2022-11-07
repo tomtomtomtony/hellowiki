@@ -2,8 +2,8 @@ package article
 
 import (
 	"github.com/gin-gonic/gin"
+	"hellowiki/api/result"
 	"hellowiki/api/v1/article/vo"
-	"hellowiki/common/result"
 	"hellowiki/service"
 )
 

@@ -2,7 +2,7 @@ package service
 
 import (
 	"golang.org/x/crypto/bcrypt"
-	"hellowiki/common/result"
+	"hellowiki/api/result"
 	"hellowiki/model"
 	"log"
 )

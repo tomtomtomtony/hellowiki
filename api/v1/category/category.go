@@ -2,8 +2,8 @@ package category
 
 import (
 	"github.com/gin-gonic/gin"
+	"hellowiki/api/result"
 	"hellowiki/api/v1/category/vo"
-	"hellowiki/common/result"
 	"hellowiki/model"
 	"hellowiki/service"
 	"strconv"

@@ -2,8 +2,8 @@ package service
 
 import (
 	"github.com/blevesearch/bleve/v2"
+	"hellowiki/api/result"
 	"hellowiki/api/v1/article/vo"
-	"hellowiki/common/result"
 	"hellowiki/model"
 )
 
