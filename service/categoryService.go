@@ -86,7 +86,7 @@ func GetAllCategory(pageSize int, pageNum int) []model.Category {
 func DeleteCategory(category model.Category) int {
 	children := model.FindCategoryChildren(category.ID)
 	var newData model.Category
-	tx := model.DbBase.Begin()
+	tx := config.DbBase.Begin()
 	//1.更新每个孩子节点的父节点Id和名称
 	for _, curr := range children {
 		//1.1若为待删节点为根节点，其直接子节点将成为顶级父节点

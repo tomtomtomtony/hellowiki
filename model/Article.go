@@ -41,8 +41,8 @@ func CreateArticle(article Article, classifiedName string) int {
 	}
 	defer dbSearch.Close()
 	docId := article.Title + common.UNDER_SCORE + strconv.FormatInt(time.Now().Unix(), 10)
-	err = dbSearch.Index(docId, article)
-	if err != nil {
+	config.err = dbSearch.Index(docId, article)
+	if config.err != nil {
 		return result.ERROR
 	}
 
