@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/blevesearch/bleve/v2"
 	"hellowiki/api/result"
 	"hellowiki/api/v1/category/vo"
 	"hellowiki/common"
@@ -17,17 +16,13 @@ import (
 func CreateCategory(condition vo.ConditionVO) (code int) {
 	var data model.Category
 	var err error
-	if condition.ParentId == model.TOPLEVELCATEGORY {
-		code = handleCreateRootCategory(condition)
-	} else {
-		code = handleCreateNonRootCategory(condition)
-	}
+	code = preTreatment(condition)
 	if code != result.SUCCSE {
 		return code
 	}
 	data = vo2Do(condition)
 	//写入数据库
-	code, dataId := model.CreateCategory(data)
+	code, dataId := model.WriteToDBCategoryTable(data)
 	if code != result.SUCCSE {
 		log.Println("新增分类写入数据库失败")
 		return result.ERROR
@@ -44,12 +39,10 @@ func CreateCategory(condition vo.ConditionVO) (code int) {
 		"tokenizer": searchConfig.TokenName,
 	}
 	articlesMapping := utils2.BuildArticleMapping(tokenOpt)
-	index, err := bleve.New(config.Cfg.SearchDB.AbsPath+string(os.PathSeparator)+indexName, articlesMapping)
-	if err != nil {
-		log.Println("新增分类写入索引失败")
-		return result.ERROR
+	code = model.WriteToCategoryIndex(indexName, articlesMapping)
+	if code != result.SUCCSE {
+		return code
 	}
-
 	//写入磁盘文件夹
 	dirName := indexName
 	err = os.Mkdir(config.Cfg.DirDB.AbsPath+string(os.PathSeparator)+dirName, os.ModePerm)
@@ -57,25 +50,12 @@ func CreateCategory(condition vo.ConditionVO) (code int) {
 		log.Println("新增分类写入磁盘失败")
 		return result.ERROR
 	}
-	if err := index.Close(); err != nil {
-		log.Fatalf("未能正确关闭文件")
-	}
 
 	return result.SUCCSE
 }
 
-func handleCreateRootCategory(categoryInfo vo.ConditionVO) int {
-	children := model.FindDirectChildren(model.TOPLEVELCATEGORY)
-	for _, curr := range children {
-		if curr.Name == categoryInfo.Name {
-			return result.ERROR_CATEGORY_EXIST
-		}
-	}
-	return result.SUCCSE
-}
-
-func handleCreateNonRootCategory(categoryInfo vo.ConditionVO) int {
-	if !HasCategory(categoryInfo.ParentId) {
+func preTreatment(categoryInfo vo.ConditionVO) int {
+	if categoryInfo.ParentId != model.TOPLEVELCATEGORY && !HasCategory(categoryInfo.ParentId) {
 		return result.ERROR_CATEGORY_NOT_FOUND
 	}
 	children := model.FindDirectChildren(categoryInfo.ParentId)

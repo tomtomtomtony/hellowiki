@@ -5,6 +5,7 @@ import (
 	"github.com/blevesearch/bleve/v2"
 	"hellowiki/api/result"
 	"hellowiki/common"
+	"hellowiki/common/utils"
 	"hellowiki/config"
 	utils2 "hellowiki/model/utils"
 	"log"
@@ -26,7 +27,7 @@ var (
 )
 
 func HasCategoryContent(contentName string) (bool, error) {
-	return utils2.HasDirectory(config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + contentName)
+	return utils.HasDirectory(config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + contentName)
 }
 
 func CreateArticle(article Article, classifiedName string) int {

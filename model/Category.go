@@ -1,8 +1,10 @@
 package model
 
 import (
+	"github.com/blevesearch/bleve/v2/mapping"
 	"gorm.io/gorm"
 	"hellowiki/api/result"
+	"hellowiki/model/utils"
 	"log"
 )
 
@@ -44,13 +46,18 @@ func HasCategoryTable(tableName string) bool {
 	return DbBase.Migrator().HasTable(tableName)
 }
 
-// 新增分类数据
-func CreateCategory(data Category) (code int, id uint) {
+// 数据库写入新增分类数据
+func WriteToDBCategoryTable(data Category) (code int, id uint) {
 	err := DbBase.Create(&data).Error
 	if err != nil {
 		return result.ERROR, 0
 	}
 	return result.SUCCSE, data.ID
+}
+
+// 索引写入
+func WriteToCategoryIndex(indexName string, mapping mapping.IndexMapping) int {
+	return utils.WriteToIndexDir(indexName, mapping)
 }
 
 // 查询分类列表

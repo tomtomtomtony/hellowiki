@@ -2,8 +2,8 @@ package utils
 
 import "os"
 
-func HasDirectory(dirName string) (bool, error) {
-	_, err := os.Stat(dirName)
+func HasDirectory(path string) (bool, error) {
+	_, err := os.Stat(path)
 	if err == nil {
 		return true, nil
 	}
