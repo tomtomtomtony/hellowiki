@@ -1,10 +1,14 @@
 package service
 
 import (
-	"github.com/blevesearch/bleve/v2"
+	"fmt"
 	"hellowiki/api/result"
 	"hellowiki/api/v1/article/vo"
+	"hellowiki/common"
 	"hellowiki/model"
+	"hellowiki/model/utils"
+	"log"
+	"strings"
 )
 
 func CreateArticle(condition vo.ConditionVO) int {
@@ -13,21 +17,52 @@ func CreateArticle(condition vo.ConditionVO) int {
 	}
 	IndexName := model.UNCLASSIFIED_ARTICLES
 	if condition.CategoryName != "" {
-		IndexName = ConstructStandardIndexName(condition.CategoryEngName, condition.CategoryId)
+		IndexName = utils.ConstructStandardIndexName(condition.CategoryName, condition.CategoryId)
+
 	}
 	var article model.Article
 	article = voTDo(condition)
-	return model.CreateArticle(article, IndexName)
+
+	code := model.ArticleWriteIndex(article, IndexName)
+	if code != result.SUCCSE {
+		return code
+	}
+	code = model.ArticleWriteDir(article, IndexName)
+	if code != result.SUCCSE {
+		return code
+	}
+	code = model.ArticleWriteMenu(vo2Menu(condition))
+
+	return code
 }
 
-func QueryInCategory(condition vo.ConditionVO) (bleve.SearchResult, int) {
-	categoryNameInContent := ConstructStandardIndexName(condition.CategoryEngName, condition.CategoryId)
-	if !HasCategoryInIndex(categoryNameInContent) {
-		return bleve.SearchResult{}, result.ERROR
+func vo2Menu(vo vo.ConditionVO) model.Menu {
+	var Do model.Menu
+	Do.Name = vo.ArticleTitle
+	Do.ParentId = vo.CategoryId
+	Do.ParentName = vo.CategoryName
+	Do.Type = 2
+	return Do
+}
+
+func QueryInCategory(condition vo.ConditionVO) ([]string, int) {
+	categoryNameInContent := utils.ConstructStandardIndexName(condition.CategoryName, condition.CategoryId)
+
+	//检查分类文件夹是否存在
+	checkContentDir, err := model.HasCategoryInIndexDir(categoryNameInContent)
+	if !checkContentDir || err != nil {
+		log.Printf("读入错误，未能找到{%v}:{%v}\n", categoryNameInContent, err)
+		return []string{}, result.ERROR
 	}
-	res, code := model.GetAllInAIndex(condition.PageSize, condition.PageNum, categoryNameInContent)
+
+	resRaw, code := model.GetAllArticleTitle(categoryNameInContent)
+	res := make([]string, 0, resRaw.Hits.Len())
+	for _, title := range resRaw.Hits {
+		fmt.Printf("{%v}", title)
+		res = append(res, strings.Split(title.ID, common.UNDER_SCORE)[0])
+	}
 	if code != result.SUCCSE {
-		return bleve.SearchResult{}, code
+		return res, code
 	}
 	return res, code
 }

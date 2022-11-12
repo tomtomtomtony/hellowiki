@@ -5,6 +5,7 @@ import (
 	"hellowiki/api/result"
 	"hellowiki/model"
 	"hellowiki/service"
+	"log"
 	"strconv"
 )
 
@@ -16,7 +17,7 @@ func Register(c *gin.Context) {
 	code = service.CreateUser(&userInfo)
 	if code == result.ERROR_USERNAME_USED {
 		result.RestFulResult(c, code)
-		return
+		log.Fatalf("用户名已经被使用")
 	}
 	result.RestFulResult(c, code, userInfo)
 }
@@ -43,7 +44,7 @@ func SetUserName(c *gin.Context) {
 	code = service.SetUser(uint(id), condition)
 	if code == result.ERROR_USER_NOT_FOUND {
 		result.RestFulResult(c, code)
-		return
+		log.Fatalf("用户不存在")
 	}
 	result.RestFulResult(c, code, condition)
 }

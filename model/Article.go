@@ -7,7 +7,6 @@ import (
 	"hellowiki/common"
 	"hellowiki/common/utils"
 	"hellowiki/config"
-	utils2 "hellowiki/model/utils"
 	"log"
 	"os"
 	"strconv"
@@ -30,10 +29,9 @@ func HasCategoryInContentDir(categoryName string) (bool, error) {
 	return utils.HasDirectory(config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + categoryName)
 }
 
-func CreateArticle(article Article, classifiedName string) int {
-
+func ArticleWriteIndex(article Article, classifiedName string) int {
 	//写入索引
-	dbSearch, code := utils2.OpenIndex(classifiedName)
+	dbSearch, code := utils.OpenIndex(classifiedName)
 	if code != result.SUCCSE {
 		log.Println("写入索引失败")
 		return code
@@ -44,7 +42,10 @@ func CreateArticle(article Article, classifiedName string) int {
 	if err != nil {
 		return result.ERROR
 	}
+	return result.SUCCSE
+}
 
+func ArticleWriteDir(article Article, classifiedName string) int {
 	//写入磁盘
 	dirName := config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + classifiedName
 	//检查分类文件夹是否存在
@@ -66,21 +67,29 @@ func CreateArticle(article Article, classifiedName string) int {
 	if err := write.Flush(); err != nil {
 		// failed to encode
 		log.Fatalf("刷入磁盘错误，未能存储指定文章:{%v}", err)
-
+		return result.ERROR
 	}
 	if err := fileHandle.Close(); err != nil {
-		// failed to close the file
 		log.Fatalf("未能正确关闭文件:{%v}", err)
+		return result.ERROR
 	}
-
 	return result.SUCCSE
+}
 
+func ArticleWriteMenu(menu Menu) int {
+	//写入数据库菜单表
+	dbBase := utils.OpenDB()
+	err := dbBase.Create(&menu).Error
+	if err != nil {
+		return result.ERROR
+	}
+	return result.SUCCSE
 }
 
 func GetAllInAIndex(pageSize int, pageNum int, indexName string) (bleve.SearchResult, int) {
 
 	allIndexName := config.Cfg.SearchDB.Location + indexName
-	dbSearch, code := utils2.OpenIndex(allIndexName)
+	dbSearch, code := utils.OpenIndex(allIndexName)
 	if code != result.SUCCSE {
 		return bleve.SearchResult{}, code
 	}
@@ -90,6 +99,20 @@ func GetAllInAIndex(pageSize int, pageNum int, indexName string) (bleve.SearchRe
 	searchRequest.Size = pageSize
 	searchRequest.From = pageNum
 	searchRequest.Fields = []string{"img", "des", "tag", "title", "content"}
+	searchResult, _ := dbSearch.Search(searchRequest)
+	return *searchResult, result.SUCCSE
+}
+
+func GetAllArticleTitle(indexName string) (bleve.SearchResult, int) {
+	dbSearch, code := utils.OpenIndex(indexName)
+	if code != result.SUCCSE {
+		return bleve.SearchResult{}, code
+	}
+	defer dbSearch.Close()
+	query := bleve.NewMatchAllQuery()
+	searchRequest := bleve.NewSearchRequest(query)
+
+	searchRequest.Fields = []string{"id"}
 	searchResult, _ := dbSearch.Search(searchRequest)
 	return *searchResult, result.SUCCSE
 }

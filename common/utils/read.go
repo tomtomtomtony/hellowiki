@@ -3,7 +3,6 @@ package utils
 import (
 	"github.com/blevesearch/bleve/v2"
 	"hellowiki/api/result"
-	"hellowiki/common/utils"
 	"hellowiki/config"
 	"log"
 	"os"
@@ -24,5 +23,5 @@ func OpenIndex(indexName string) (bleve.Index, int) {
 }
 
 func HasCategoryIndex(indexName string) (bool, error) {
-	return utils.HasDirectory(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + indexName)
+	return HasDirectory(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + indexName)
 }

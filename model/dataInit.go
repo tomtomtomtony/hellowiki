@@ -15,8 +15,6 @@ import (
 	"time"
 )
 
-var DbBase *gorm.DB
-
 func init() {
 	//初始化数据目录
 	check, err := utils.HasDirectory(config.Cfg.DataDir.Location)
@@ -48,7 +46,7 @@ func initDataBase() {
 		}
 	}
 	//初始化数据库
-	DbBase, err = gorm.Open(sqlite.Open(config.Cfg.DataBase.AbsPath+string(os.PathSeparator)+config.Cfg.DataBase.DefaultDBName), &gorm.Config{
+	dbBase, err := gorm.Open(sqlite.Open(config.Cfg.DataBase.AbsPath+string(os.PathSeparator)+config.Cfg.DataBase.DefaultDBName), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
@@ -60,8 +58,8 @@ func initDataBase() {
 	if err != nil {
 		log.Fatalf("fail to connect database:{%v}", err)
 	}
-	DbBase.Set("gorm:table_options", "AUTO_INCREMENT=1")
-	err = DbBase.AutoMigrate(RegUser{}, Category{})
+	dbBase.Set("gorm:table_options", "AUTO_INCREMENT=1")
+	err = dbBase.AutoMigrate(RegUser{}, Menu{})
 	if err != nil {
 		log.Fatalf("建表失败")
 	}

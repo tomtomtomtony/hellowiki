@@ -71,5 +71,4 @@ func init() {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-
 }

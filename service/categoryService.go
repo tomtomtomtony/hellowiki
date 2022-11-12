@@ -3,14 +3,13 @@ package service
 import (
 	"hellowiki/api/result"
 	"hellowiki/api/v1/category/vo"
-	"hellowiki/common"
+	"hellowiki/common/utils"
 	"hellowiki/config"
 	"hellowiki/model"
 	"hellowiki/model/searchConfig"
 	utils2 "hellowiki/model/utils"
 	"log"
 	"os"
-	"strconv"
 )
 
 func CreateCategory(condition vo.ConditionVO) (code int) {
@@ -22,13 +21,15 @@ func CreateCategory(condition vo.ConditionVO) (code int) {
 	}
 	data = vo2Do(condition)
 	//写入数据库
-	code, dataId := model.WriteToDBCategoryTable(data)
+	code, dataId := model.CategoryWriteToDBMenuTable(vo2MenuType(condition))
 	if code != result.SUCCSE {
-		log.Println("新增分类写入数据库失败")
+		log.Println("新增菜单写入数据库失败")
 		return result.ERROR
 	}
+
 	//写入索引文件
-	indexName := ConstructStandardIndexName(data.EngName, dataId)
+	indexName := utils2.ConstructStandardIndexName(data.Name, dataId)
+
 	tokenOpt := map[string]interface{}{
 		"dicts":     config.Cfg.Analyze.Dict,
 		"stop":      "",
@@ -43,6 +44,7 @@ func CreateCategory(condition vo.ConditionVO) (code int) {
 	if code != result.SUCCSE {
 		return code
 	}
+
 	//写入磁盘文件夹
 	dirName := indexName
 	err = os.Mkdir(config.Cfg.DirDB.AbsPath+string(os.PathSeparator)+dirName, os.ModePerm)
@@ -73,8 +75,10 @@ func GetAllCategory(pageSize int, pageNum int) []model.Category {
 
 func DeleteCategory(category model.Category) int {
 	children := model.FindDirectChildren(category.ID)
-	var newData model.Category
-	tx := model.DbBase.Begin()
+	var newData model.Menu
+	dbBase := utils.OpenDB()
+
+	tx := dbBase.Begin()
 	//1.更新每个孩子节点的父节点Id和名称
 	for _, curr := range children {
 		//1.1若为待删节点为根节点，其直接子节点将成为顶级父节点
@@ -83,12 +87,12 @@ func DeleteCategory(category model.Category) int {
 		} else {
 			newData.ParentId, newData.ParentName = category.ParentId, category.ParentName
 		}
-		if err := tx.Model(&model.Category{}).Where("id=?", curr.ID).Updates(newData).Error; err != nil {
+		if err := tx.Model(&model.Menu{}).Where("id=?", curr.ID).Updates(newData).Error; err != nil {
 			tx.Rollback()
 			return result.ERROR
 		}
 	} //2.删除节点本身
-	if err := tx.Delete(&model.Category{}, "id=?", category.ID).Error; err != nil {
+	if err := tx.Delete(&model.Menu{}, "id=?", category.ID).Error; err != nil {
 		tx.Rollback()
 		return result.ERROR
 	}
@@ -106,12 +110,12 @@ func SetCategory(id uint, data model.Category) int {
 }
 
 func HasCategory(id uint) bool {
-	return model.GetCategoryById(id) != model.Category{}
+	return model.GetCategoryById(id) != model.Menu{}
 }
 
 // 传入索引名称符合格式: article的 engName_categoryId
 func HasCategoryInIndex(indexName string) bool {
-	check := model.HasCategoryInIndexDir(indexName)
+	check, _ := model.HasCategoryInIndexDir(indexName)
 	return check
 }
 
@@ -121,16 +125,20 @@ func HasCategoryInIndex(indexName string) bool {
 //
 //}
 
-func ConstructStandardIndexName(categoryEngName string, categoryId uint) string {
-	return categoryEngName + common.UNDER_SCORE + strconv.Itoa(int(categoryId))
-}
-
 func vo2Do(vo vo.ConditionVO) model.Category {
 	var Do model.Category
 	Do.ID = vo.CategoryId
 	Do.Name = vo.Name
-	Do.EngName = vo.EngName
 	Do.ParentId = vo.ParentId
 	Do.ParentName = vo.ParentName
+	return Do
+}
+
+func vo2MenuType(vo vo.ConditionVO) model.Menu {
+	var Do model.Menu
+	Do.Name = vo.Name
+	Do.ParentId = vo.ParentId
+	Do.ParentName = vo.ParentName
+	Do.Type = 1
 	return Do
 }

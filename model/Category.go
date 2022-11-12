@@ -6,7 +6,6 @@ import (
 	"hellowiki/api/result"
 	utils2 "hellowiki/common/utils"
 	"hellowiki/config"
-	"hellowiki/model/utils"
 	"log"
 	"os"
 )
@@ -15,7 +14,6 @@ import (
 type Category struct {
 	gorm.Model
 	Name       string `gorm:"type:varchar(40);not null" json:"name"`
-	EngName    string `gorm:"type:varchar(40);not null "json:"engName"`
 	ParentId   uint   `gorm:"type:int;not null" json:"parentId"`
 	ParentName string `gorm:"type:varchar(40);not null" json:"parentName"`
 }
@@ -26,56 +24,47 @@ var (
 )
 
 // 顶级父类id为0
-func FindDirectChildren(id uint) []Category {
-	var categories []Category
-	err := DbBase.Limit(500).Where("parent_id=?", id).Find(&categories).Error
+func FindDirectChildren(id uint) []Menu {
+	var categories []Menu
+	dbBase := utils2.OpenDB()
+	err := dbBase.Limit(500).Where("parent_id=? and type=1", id).Find(&categories).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		log.Printf("查找id为{%v}的直接子类时，出现错误:{%v}\n", id, err)
-		return []Category{}
+		return []Menu{}
 	}
 	return categories
 }
 
-func GetCategoryById(id uint) Category {
-	var category Category
-	err := DbBase.Take(&category, "id=?", id).Error
+// 从数据库菜单表中查询分类
+func GetCategoryById(id uint) Menu {
+	var menu Menu
+	dbBase := utils2.OpenDB()
+	err := dbBase.Take(&menu, "id=? and type=1", id).Error
 	if err != nil {
-		return Category{}
+		return Menu{}
 	}
-	return category
+	return menu
 }
 
 func HasCategoryTable(tableName string) bool {
-	return DbBase.Migrator().HasTable(tableName)
+	dbBase := utils2.OpenDB()
+	return dbBase.Migrator().HasTable(tableName)
 }
 
-func HasCategoryInIndexDir(categoryName string) bool {
-	check, err := utils2.HasDirectory(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + categoryName)
-	if check {
-		return check
-	}
-	log.Println(err)
-	return check
-}
-
-// 数据库写入新增分类数据
-func WriteToDBCategoryTable(data Category) (code int, id uint) {
-	err := DbBase.Create(&data).Error
-	if err != nil {
-		return result.ERROR, 0
-	}
-	return result.SUCCSE, data.ID
+func HasCategoryInIndexDir(categoryName string) (bool, error) {
+	return utils2.HasDirectory(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + categoryName)
 }
 
 // 索引写入
 func WriteToCategoryIndex(indexName string, mapping mapping.IndexMapping) int {
-	return utils.WriteToIndexDir(indexName, mapping)
+	return utils2.WriteToIndexDir(indexName, mapping)
 }
 
 // 查询分类列表
 func FindAllCategory(pageSize int, pageNum int) []Category {
 	var categories []Category
-	err := DbBase.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&categories).Error
+	dbBase := utils2.OpenDB()
+	err := dbBase.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&categories).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return []Category{}
 	}
@@ -84,7 +73,8 @@ func FindAllCategory(pageSize int, pageNum int) []Category {
 
 // 根据id，软删除分类信息
 func DeleteCategoryById(id uint) int {
-	err := DbBase.Delete(&Category{}, "id=?", id).Error
+	dbBase := utils2.OpenDB()
+	err := dbBase.Delete(&Category{}, "id=?", id).Error
 	if err != nil {
 		return result.ERROR
 	}
@@ -93,7 +83,8 @@ func DeleteCategoryById(id uint) int {
 
 // 根据id，更新分类信息
 func UpdateCategoryById(id uint, category Category) int {
-	err := DbBase.Model(&category).Where("id=?", id).Updates(category).Error
+	dbBase := utils2.OpenDB()
+	err := dbBase.Model(&category).Where("id=?", id).Updates(category).Error
 	if err != nil {
 		return result.ERROR
 	}
@@ -102,9 +93,20 @@ func UpdateCategoryById(id uint, category Category) int {
 
 // 根据parentId更新
 func UpdateCategoryByParentId(parentId uint, category Category) (int, error) {
-	err := DbBase.Model(&category).Where("parent_id=?", parentId).Updates(category).Error
+	dbBase := utils2.OpenDB()
+	err := dbBase.Model(&category).Where("parent_id=?", parentId).Updates(category).Error
 	if err != nil {
 		return result.ERROR, err
 	}
 	return result.SUCCSE, err
+}
+
+// 数据库写入菜单表
+func CategoryWriteToDBMenuTable(data Menu) (code int, id uint) {
+	dbBase := utils2.OpenDB()
+	err := dbBase.Create(&data).Error
+	if err != nil {
+		return result.ERROR, 0
+	}
+	return result.SUCCSE, data.ID
 }
