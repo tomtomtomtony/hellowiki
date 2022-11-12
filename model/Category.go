@@ -4,8 +4,11 @@ import (
 	"github.com/blevesearch/bleve/v2/mapping"
 	"gorm.io/gorm"
 	"hellowiki/api/result"
+	utils2 "hellowiki/common/utils"
+	"hellowiki/config"
 	"hellowiki/model/utils"
 	"log"
+	"os"
 )
 
 // 文章分类
@@ -44,6 +47,15 @@ func GetCategoryById(id uint) Category {
 
 func HasCategoryTable(tableName string) bool {
 	return DbBase.Migrator().HasTable(tableName)
+}
+
+func HasCategoryInIndexDir(categoryName string) bool {
+	check, err := utils2.HasDirectory(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + categoryName)
+	if check {
+		return check
+	}
+	log.Println(err)
+	return check
 }
 
 // 数据库写入新增分类数据

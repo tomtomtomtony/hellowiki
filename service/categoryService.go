@@ -93,8 +93,8 @@ func DeleteCategory(category model.Category) int {
 		return result.ERROR
 	}
 	//3.若分类下没有文章，则对应的表也删除
-
 	tx.Commit()
+
 	return result.SUCCSE
 }
 
@@ -110,8 +110,9 @@ func HasCategory(id uint) bool {
 }
 
 // 传入索引名称符合格式: article的 engName_categoryId
-func HasArticleIndex(indexName string) bool {
-	return utils2.HasCategoryIndex(indexName)
+func HasCategoryInIndex(indexName string) bool {
+	check := model.HasCategoryInIndexDir(indexName)
+	return check
 }
 
 //func repairTable(categoryId uint) int {

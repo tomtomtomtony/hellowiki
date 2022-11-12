@@ -21,11 +21,11 @@ func CreateArticle(condition vo.ConditionVO) int {
 }
 
 func QueryInCategory(condition vo.ConditionVO) (bleve.SearchResult, int) {
-	tableName := ConstructStandardIndexName(condition.CategoryEngName, condition.CategoryId)
-	if !HasArticleIndex(tableName) {
+	categoryNameInContent := ConstructStandardIndexName(condition.CategoryEngName, condition.CategoryId)
+	if !HasCategoryInIndex(categoryNameInContent) {
 		return bleve.SearchResult{}, result.ERROR
 	}
-	res, code := model.GetAllInAIndex(condition.PageSize, condition.PageNum, tableName)
+	res, code := model.GetAllInAIndex(condition.PageSize, condition.PageNum, categoryNameInContent)
 	if code != result.SUCCSE {
 		return bleve.SearchResult{}, code
 	}

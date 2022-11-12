@@ -15,7 +15,8 @@ func CreateArticle(c *gin.Context) {
 	result.RestFulResult(c, code)
 }
 
-func GetAllInCategory(c *gin.Context) {
+// 获取一个分类下所有文章
+func GetAllCurrentCategory(c *gin.Context) {
 	var condition vo.ConditionVO
 	_ = c.BindJSON(&condition)
 	data, code := service.QueryInCategory(condition)

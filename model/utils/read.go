@@ -3,15 +3,18 @@ package utils
 import (
 	"github.com/blevesearch/bleve/v2"
 	"hellowiki/api/result"
+	"hellowiki/common/utils"
 	"hellowiki/config"
 	"log"
 	"os"
 )
 
 func OpenIndex(indexName string) (bleve.Index, int) {
-	if !HasCategoryIndex(indexName) {
+	_, err := HasCategoryIndex(indexName)
+	if err != nil {
 		return nil, result.ERROR
 	}
+
 	dbSearch, err := bleve.Open(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + indexName)
 	if err != nil {
 		log.Printf("打开{%v}索引失败:{%v}", indexName, err)
@@ -20,10 +23,6 @@ func OpenIndex(indexName string) (bleve.Index, int) {
 	return dbSearch, result.SUCCSE
 }
 
-func HasCategoryIndex(indexName string) bool {
-	_, err := os.OpenFile(config.Cfg.SearchDB.AbsPath+indexName, os.O_RDONLY, os.ModePerm)
-	if err != nil {
-		return false
-	}
-	return true
+func HasCategoryIndex(indexName string) (bool, error) {
+	return utils.HasDirectory(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + indexName)
 }

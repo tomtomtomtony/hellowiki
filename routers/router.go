@@ -31,7 +31,7 @@ func InitRouter() *gin.Engine {
 	routerArticleV1 := r.Group("api/v1/article")
 	{
 		routerArticleV1.POST("/create", article.CreateArticle)
-		routerArticleV1.POST("/allInCategory", article.GetAllInCategory)
+		routerArticleV1.POST("/allInCategory", article.GetAllCurrentCategory)
 	}
 
 	return r
