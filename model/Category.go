@@ -13,9 +13,9 @@ import (
 // 文章分类
 type Category struct {
 	gorm.Model
-	Name       string `gorm:"type:varchar(40);not null" json:"name"`
-	ParentId   uint   `gorm:"type:int;not null" json:"parentId"`
-	ParentName string `gorm:"type:varchar(40);not null" json:"parentName"`
+	Name         string `gorm:"type:varchar(40);not null" json:"name"`
+	ParentMenuId uint   `gorm:"type:int;not null" json:"parentMenuId"`
+	ParentName   string `gorm:"type:varchar(40);not null" json:"parentName"`
 }
 
 var (
@@ -24,12 +24,12 @@ var (
 )
 
 // 顶级父类id为0
-func FindDirectChildren(id uint) []Menu {
+func FindDirectCateGoryChildren(id uint) []Menu {
 	var categories []Menu
 	dbBase := utils2.OpenDB()
 	err := dbBase.Limit(500).Where("parent_id=? and type=1", id).Find(&categories).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
-		log.Printf("查找id为{%v}的直接子类时，出现错误:{%v}\n", id, err)
+		log.Fatalf("查找id为{%v}的直接子类时，出现错误:{%v}\n", id, err)
 		return []Menu{}
 	}
 	return categories
@@ -58,17 +58,6 @@ func HasCategoryInIndexDir(categoryName string) (bool, error) {
 // 索引写入
 func WriteToCategoryIndex(indexName string, mapping mapping.IndexMapping) int {
 	return utils2.WriteToIndexDir(indexName, mapping)
-}
-
-// 查询分类列表
-func FindAllCategory(pageSize int, pageNum int) []Category {
-	var categories []Category
-	dbBase := utils2.OpenDB()
-	err := dbBase.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&categories).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return []Category{}
-	}
-	return categories
 }
 
 // 根据id，软删除分类信息

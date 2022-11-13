@@ -1,6 +1,10 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+	utils2 "hellowiki/common/utils"
+	"log"
+)
 
 /*
 *
@@ -12,4 +16,26 @@ type Menu struct {
 	ParentId   uint   `gorm:"type:int;not null" json:"parentId"`
 	ParentName string `gorm:"type:varchar(40);not null" json:"parentName"`
 	Type       uint8  `gorm:"type:varchar(10);not null" json:"type"`
+}
+
+func GetAllDirectMenuChildren(id uint) []Menu {
+	var menus []Menu
+	dbBase := utils2.OpenDB()
+	err := dbBase.Limit(500).Where("parent_id=?", id).Find(&menus).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		log.Fatalf("查找id为{%v}的直接子类时，出现错误:{%v}\n", id, err)
+		return []Menu{}
+	}
+	return menus
+}
+
+func GetTopLevelMenu() []Menu {
+	var menus []Menu
+	dbBase := utils2.OpenDB()
+	err := dbBase.Limit(500).Where("parent_id=0").Find(&menus).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		log.Fatalf("查询顶级分类时出现错误:{%v}\n", err)
+		return []Menu{}
+	}
+	return menus
 }

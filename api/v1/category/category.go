@@ -33,18 +33,6 @@ func DeleteCategory(c *gin.Context) {
 
 }
 
-func QueryAllCategory(c *gin.Context) {
-	var pageSize, pageNum = 10, 1
-	pageSize, _ = strconv.Atoi(c.Query("pageSize"))
-	pageNum, _ = strconv.Atoi(c.Query("pageNum"))
-	data := service.GetAllCategory(pageSize, pageNum)
-	if data == nil {
-		result.RestFulResult(c, result.ERROR)
-		return
-	}
-	result.RestFulResult(c, result.SUCCSE, data)
-}
-
 func ReNameCategory(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var condition model.Category
@@ -53,7 +41,7 @@ func ReNameCategory(c *gin.Context) {
 	result.RestFulResult(c, code)
 }
 
-// 重建对应分类的数据库表。用于分类存在，但数据库对应分类文章表损坏的情况
+// 重建对应分类的数据库表。用于content有效，但数据库对应分类文章表损坏的情况
 func repairTable(c *gin.Context) {
 
 }

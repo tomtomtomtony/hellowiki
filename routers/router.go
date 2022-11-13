@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"hellowiki/api/v1/article"
 	"hellowiki/api/v1/category"
+	"hellowiki/api/v1/menu"
 	"hellowiki/api/v1/user"
 )
 
@@ -24,7 +25,6 @@ func InitRouter() *gin.Engine {
 	{
 		routerCategoryV1.POST("/create", category.CreateCategory)
 		routerCategoryV1.DELETE("/del/:id", category.DeleteCategory)
-		routerCategoryV1.GET("/all", category.QueryAllCategory)
 		routerCategoryV1.PUT("/rename/:id", category.ReNameCategory)
 	}
 
@@ -34,5 +34,11 @@ func InitRouter() *gin.Engine {
 		routerArticleV1.POST("/allInCategory", article.GetAllTitleCurrentCategory)
 	}
 
+	routerMenuV1 := r.Group("api/v1/menu")
+	{
+		routerMenuV1.GET("/currentall", menu.GetAllMenuCurrentCategory)
+		routerMenuV1.GET("/alltop", menu.GetAllTopCategory)
+
+	}
 	return r
 }

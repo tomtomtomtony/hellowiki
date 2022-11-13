@@ -81,13 +81,13 @@ func ArticleWriteMenu(menu Menu) int {
 	dbBase := utils.OpenDB()
 	err := dbBase.Create(&menu).Error
 	if err != nil {
+		log.Fatalf("写入数据库失败:{%v}", err)
 		return result.ERROR
 	}
 	return result.SUCCSE
 }
 
 func GetAllInAIndex(pageSize int, pageNum int, indexName string) (bleve.SearchResult, int) {
-
 	allIndexName := config.Cfg.SearchDB.Location + indexName
 	dbSearch, code := utils.OpenIndex(allIndexName)
 	if code != result.SUCCSE {
@@ -103,7 +103,7 @@ func GetAllInAIndex(pageSize int, pageNum int, indexName string) (bleve.SearchRe
 	return *searchResult, result.SUCCSE
 }
 
-func GetAllArticleTitle(indexName string) (bleve.SearchResult, int) {
+func GetAllArticleTitleInCategory(indexName string) (bleve.SearchResult, int) {
 	dbSearch, code := utils.OpenIndex(indexName)
 	if code != result.SUCCSE {
 		return bleve.SearchResult{}, code
@@ -111,7 +111,6 @@ func GetAllArticleTitle(indexName string) (bleve.SearchResult, int) {
 	defer dbSearch.Close()
 	query := bleve.NewMatchAllQuery()
 	searchRequest := bleve.NewSearchRequest(query)
-
 	searchRequest.Fields = []string{"id"}
 	searchResult, _ := dbSearch.Search(searchRequest)
 	return *searchResult, result.SUCCSE

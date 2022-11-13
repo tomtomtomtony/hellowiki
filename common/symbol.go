@@ -6,4 +6,5 @@ var (
 	DOT             = "."
 	TXT_FILE_SUFFIX = ".txt"
 	MD_FILE_SUFFIX  = ".md"
+	COMMAS          = ","
 )
