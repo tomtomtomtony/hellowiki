@@ -6,11 +6,13 @@ import (
 	"hellowiki/api/v1/category"
 	"hellowiki/api/v1/menu"
 	"hellowiki/api/v1/user"
+	"hellowiki/middleware"
 )
 
 func InitRouter() *gin.Engine {
 
 	r := gin.Default()
+	r.Use(middleware.CrossHandler())
 	//用户模块
 	routerUserV1 := r.Group("api/v1/user")
 	{
