@@ -37,7 +37,11 @@ func data2Vo(menu model.Menu) vo.MenuVO {
 	res.Id = menu.ID
 	res.ParentName = menu.ParentName
 	res.Name = menu.Name
-	res.Type = menu.Type
+	if menu.Type == 1 {
+		res.Type = "category"
+	} else {
+		res.Type = "article"
+	}
 	return res
 }
 
@@ -45,5 +49,10 @@ func data2TopVo(menu model.Menu) vo.TopMenu {
 	var res vo.TopMenu
 	res.Id = menu.ID
 	res.Name = menu.Name
+	if menu.Type == 1 {
+		res.Type = "category"
+	} else {
+		res.Type = "article"
+	}
 	return res
 }
