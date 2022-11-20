@@ -9,7 +9,9 @@ type MenuVO struct {
 }
 
 type TopMenu struct {
-	Id   uint   `json:"id"`
-	Name string `json:"name"`
-	Type string `json:"type"`
+	Id           uint   `json:"id"`
+	Name         string `json:"name"`
+	Type         string `json:"type"`
+	ParentMenuId uint   `json:"parentMenuId"`
+	ParentName   string `json:"parentName"`
 }
