@@ -55,9 +55,25 @@ func HasCategoryInIndexDir(categoryName string) (bool, error) {
 	return utils2.HasDirectory(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + categoryName)
 }
 
+//
+
 // 索引写入
 func WriteToCategoryIndex(indexName string, mapping mapping.IndexMapping) int {
 	return utils2.WriteToIndexDir(indexName, mapping)
+}
+
+// data/content下分类文件夹写入
+func WriteToCategoryContent(categoryName string) int {
+	return utils2.CreateFoldContent(categoryName)
+}
+
+// 索引文件夹删除
+func DeleteCategoryInIndex(indexName string) int {
+	return utils2.DeleteFold(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + indexName)
+}
+
+func DeleteCategoryInContent(categoryName string) int {
+	return utils2.DeleteFold(config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + categoryName)
 }
 
 // 根据id，软删除分类信息

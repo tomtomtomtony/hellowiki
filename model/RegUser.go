@@ -37,7 +37,7 @@ func HasUserByName(userName string) (code int) {
 }
 
 // 插入用户数据
-func CreateUser(data *RegUser) (code int) {
+func CreateUser(data RegUser) (code int) {
 	dbBase := utils2.OpenDB()
 	err := dbBase.Create(&data).Error
 	if err != nil {

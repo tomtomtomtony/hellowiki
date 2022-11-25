@@ -17,7 +17,7 @@ func CreateArticle(condition vo.ConditionVO) int {
 	}
 	IndexName := model.UNCLASSIFIED_ARTICLES
 	if condition.CategoryName != "" {
-		IndexName = utils.ConstructStandardIndexName(condition.CategoryName, condition.CategoryMenuId)
+		IndexName = utils.ConstructCategoryNameId(condition.CategoryName, condition.CategoryMenuId)
 	}
 	var article model.Article
 	article = voTDo(condition)
@@ -45,7 +45,7 @@ func vo2Menu(vo vo.ConditionVO) model.Menu {
 }
 
 func QueryInCategory(condition vo.ConditionVO) ([]string, int) {
-	categoryNameInContent := utils.ConstructStandardIndexName(condition.CategoryName, condition.CategoryMenuId)
+	categoryNameInContent := utils.ConstructCategoryNameId(condition.CategoryName, condition.CategoryMenuId)
 
 	//检查index中分类文件夹是否存在
 	checkContentDir, err := model.HasCategoryInIndexDir(categoryNameInContent)

@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/gin-gonic/gin"
 	"hellowiki/api/result"
+	"hellowiki/api/v1/user/vo"
 	"hellowiki/model"
 	"hellowiki/service"
 	"log"
@@ -12,12 +13,12 @@ import (
 var code int
 
 func Register(c *gin.Context) {
-	var userInfo model.RegUser
+	var userInfo vo.RegUserVO
 	_ = c.ShouldBind(&userInfo)
-	code = service.CreateUser(&userInfo)
+	code = service.CreateUser(userInfo)
 	if code == result.ERROR_USERNAME_USED {
 		result.RestFulResult(c, code)
-		log.Fatalf("用户名已经被使用")
+		log.Printf("用户名已经被使用")
 	}
 	result.RestFulResult(c, code, userInfo)
 }

@@ -3,11 +3,13 @@ package service
 import (
 	"golang.org/x/crypto/bcrypt"
 	"hellowiki/api/result"
+	"hellowiki/api/v1/user/vo"
 	"hellowiki/model"
 	"log"
 )
 
-func CreateUser(userInfo *model.RegUser) (code int) {
+func CreateUser(condition vo.RegUserVO) (code int) {
+	var userInfo = vo2Do(condition)
 	codeHas := model.HasUserByName(userInfo.UserName)
 	if codeHas != result.SUCCSE {
 		return codeHas
@@ -20,7 +22,12 @@ func CreateUser(userInfo *model.RegUser) (code int) {
 	}
 	return codeInsert
 }
-
+func vo2Do(userVo vo.RegUserVO) model.RegUser {
+	var do model.RegUser
+	do.UserName = userVo.UserName
+	do.PassWord = userVo.PassWord
+	return do
+}
 func GetAllRegUserInfo(pageSize int, pageNum int) []model.RegUser {
 	return model.FindAllUser(pageSize, pageNum)
 }

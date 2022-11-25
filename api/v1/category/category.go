@@ -24,13 +24,10 @@ func CreateCategory(c *gin.Context) {
 删除指定分类，需要提供分类的id,parentId,parentName,engName
 */
 func DeleteCategory(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	var category model.Category
-	category.ID = uint(id)
-	_ = c.ShouldBind(&category)
-	code := service.DeleteCategory(category)
+	var condition vo.ConditionVO
+	_ = c.ShouldBind(&condition)
+	code := service.DeleteCategory(condition)
 	result.RestFulResult(c, code)
-
 }
 
 func ReNameCategory(c *gin.Context) {

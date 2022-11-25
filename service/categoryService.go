@@ -10,17 +10,15 @@ import (
 	"hellowiki/model/searchConfig"
 	utils2 "hellowiki/model/utils"
 	"log"
-	"os"
 )
 
 func CreateCategory(condition vo.ConditionVO) (code int) {
-	var data model.Category
-	var err error
+	var data = vo2Category(condition)
 	code = preTreatment(condition)
 	if code != result.SUCCSE {
 		return code
 	}
-	data = vo2Category(condition)
+
 	//写入数据库
 	code, dataId := model.CategoryWriteToDBMenuTable(vo2MenuType(condition))
 	if code != result.SUCCSE {
@@ -29,7 +27,7 @@ func CreateCategory(condition vo.ConditionVO) (code int) {
 	}
 
 	//写入索引文件
-	indexName := utils2.ConstructStandardIndexName(data.Name, dataId)
+	indexName := utils2.ConstructCategoryNameId(data.Name, dataId)
 
 	tokenOpt := map[string]interface{}{
 		"dicts":     config.Cfg.Analyze.Dict,
@@ -48,8 +46,8 @@ func CreateCategory(condition vo.ConditionVO) (code int) {
 
 	//写入磁盘文件夹
 	dirName := indexName
-	err = os.Mkdir(config.Cfg.DirDB.AbsPath+string(os.PathSeparator)+dirName, os.ModePerm)
-	if err != nil {
+	code = model.WriteToCategoryContent(dirName)
+	if code != result.SUCCSE {
 		log.Println("新增分类写入磁盘失败")
 		return result.ERROR
 	}
@@ -70,13 +68,14 @@ func preTreatment(categoryInfo vo.ConditionVO) int {
 	return result.SUCCSE
 }
 
-func DeleteCategory(category model.Category) int {
+func DeleteCategory(condition vo.ConditionVO) int {
+	var category = vo2Category(condition)
 	children := model.FindDirectCateGoryChildren(category.ID)
 	var newData model.Menu
 	dbBase := utils.OpenDB()
 
 	tx := dbBase.Begin()
-	//1.更新每个孩子节点的父节点Id和名称
+	//1.1更新每个孩子节点的父节点Id和名称
 	for _, curr := range children {
 		//1.1若为待删节点为根节点，其直接子节点将成为顶级父节点
 		if category.ParentMenuId == model.TOPLEVELCATEGORY {
@@ -88,15 +87,37 @@ func DeleteCategory(category model.Category) int {
 			tx.Rollback()
 			return result.ERROR
 		}
-	} //2.删除节点本身
+	} //1.2.删除节点本身
 	if err := tx.Delete(&model.Menu{}, "id=?", category.ID).Error; err != nil {
 		tx.Rollback()
 		return result.ERROR
 	}
-	//3.若分类下没有文章，则对应的表也删除
 	tx.Commit()
+	//2.删除markdown文件
+	dirName := utils2.ConstructCategoryNameId(category.Name, category.ID)
+	if !utils.FoldIsEmptyInContent(dirName) {
+		log.Printf("content文件夹下指定文件夹{%v}不为空", dirName)
+		return result.ERROR
+	}
+	code := model.DeleteCategoryInContent(dirName)
+	if code != result.SUCCSE {
+		log.Println("content文件夹下指定文件夹删除失败")
+		return result.ERROR
+	}
 
+	//3.删除索引文件
+	indexName := dirName
+	if !HasCategoryInIndex(indexName) {
+		log.Println("index文件夹下指定文件夹不存在")
+		return result.ERROR
+	}
+	code = model.DeleteCategoryInIndex(indexName)
+	if code != result.SUCCSE {
+		log.Println("index文件夹下指定文件夹删除失败")
+		return result.ERROR
+	}
 	return result.SUCCSE
+
 }
 
 func SetCategory(id uint, data model.Category) int {
@@ -110,17 +131,11 @@ func HasCategoryInDBTable(id uint) bool {
 	return model.GetCategoryById(id) != model.Menu{}
 }
 
-// 传入索引名称符合格式: article的 engName_categoryId
+// 传入索引名称符合格式: article的 categroyName_categoryId
 func HasCategoryInIndex(indexName string) bool {
 	check, _ := model.HasCategoryInIndexDir(indexName)
 	return check
 }
-
-//func repairTable(categoryId uint) int {
-//	var category model.Category
-//	category = model.GetCategoryById(categoryId)
-//
-//}
 
 func vo2Category(vo vo.ConditionVO) model.Category {
 	var Do model.Category

@@ -26,7 +26,7 @@ func InitRouter() *gin.Engine {
 	routerCategoryV1 := r.Group("api/v1/category")
 	{
 		routerCategoryV1.POST("/create", category.CreateCategory)
-		routerCategoryV1.DELETE("/del/:id", category.DeleteCategory)
+		routerCategoryV1.POST("/del", category.DeleteCategory)
 		routerCategoryV1.PUT("/rename/:id", category.ReNameCategory)
 	}
 
