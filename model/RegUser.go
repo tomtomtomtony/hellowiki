@@ -10,6 +10,7 @@ type RegUser struct {
 	gorm.Model
 	UserName string `gorm:"type:varchar(20);not null " json:"userName"`
 	PassWord string `gorm:"type:varchar(30);not null " json:"passWord"`
+	IsEnable bool   `gorm:"type:boolean;not null" json:"isEnable"`
 }
 
 func HasUserById(id uint) (code int) {
@@ -78,11 +79,12 @@ func UpdateUserById(id uint, regUser RegUser) int {
 }
 
 // 按username查询
-//func FindByName(username string) RegUser {
-//	var regUser RegUser
-//	err := DbBase.Take(&regUser, "user_name=?", username).Error
-//	if err != nil && err != gorm.ErrRecordNotFound {
-//		return
-//	}
-//	return
-//}
+func FindByName(username string) RegUser {
+	var regUser RegUser
+	dbBase := utils2.OpenDB()
+	err := dbBase.Take(&regUser, "user_name=?", username).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return RegUser{}
+	}
+	return regUser
+}

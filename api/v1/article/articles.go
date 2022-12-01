@@ -25,3 +25,17 @@ func GetAllTitleCurrentCategory(c *gin.Context) {
 	}
 	result.RestFulResult(c, result.SUCCSE, data)
 }
+
+// 获取指定的文章
+func GetArticle(c *gin.Context) {
+	var article vo.ConditionVO
+	_ = c.ShouldBind(&article)
+	rawData, code := service.GetArticle(article)
+	if code != result.SUCCSE {
+		result.RestFulResult(c, code)
+	}
+	var res vo.ResultVo
+	res.Title = rawData.Title
+	res.Content = rawData.Content
+	result.RestFulResult(c, code, res)
+}

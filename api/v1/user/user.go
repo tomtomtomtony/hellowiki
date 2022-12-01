@@ -12,6 +12,17 @@ import (
 
 var code int
 
+func Login(c *gin.Context) {
+	var userInfo vo.LoginUserVO
+	_ = c.ShouldBind(&userInfo)
+	userName, token, code := service.UserLogin(userInfo)
+	var res vo.LoginUserVO
+	res.Token = token
+	res.UserName = userName
+	res.Code = result.SUCCSE
+	result.RestFulResult(c, code, res)
+}
+
 func Register(c *gin.Context) {
 	var userInfo vo.RegUserVO
 	_ = c.ShouldBind(&userInfo)

@@ -16,3 +16,8 @@ Port=":8080"
 Dict="embed, zh"
 [dataDir]
 Location="./data/"
+[jwtConfig]
+SecretKey="hellowiki7998"
+TokenExpireDuration="60m"
+Issuer="hellowikiAdmin"
+MaxRefreshTime="10m"

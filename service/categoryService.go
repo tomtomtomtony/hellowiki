@@ -131,7 +131,11 @@ func HasCategoryInDBTable(id uint) bool {
 	return model.GetCategoryById(id) != model.Menu{}
 }
 
-// 传入索引名称符合格式: article的 categroyName_categoryId
+func HasCategoryInContent(categoryName string) bool {
+	check, _ := utils.HasCategoryInContentDir(categoryName)
+	return check
+}
+
 func HasCategoryInIndex(indexName string) bool {
 	check, _ := model.HasCategoryInIndexDir(indexName)
 	return check

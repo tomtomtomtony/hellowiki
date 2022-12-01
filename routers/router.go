@@ -17,13 +17,14 @@ func InitRouter() *gin.Engine {
 	routerUserV1 := r.Group("api/v1/user")
 	{
 		routerUserV1.POST("/register", user.Register)
+		routerUserV1.POST("/login", user.Login)
 		routerUserV1.GET("/all", user.QueryAllUserInfo)
 		routerUserV1.DELETE("/del/:id", user.DeleteUser)
 		routerUserV1.PUT("/edt/:id", user.SetUserName)
-
 	}
 	//分类模块
 	routerCategoryV1 := r.Group("api/v1/category")
+	routerCategoryV1.Use(middleware.JWTAuth())
 	{
 		routerCategoryV1.POST("/create", category.CreateCategory)
 		routerCategoryV1.POST("/del", category.DeleteCategory)
@@ -31,12 +32,16 @@ func InitRouter() *gin.Engine {
 	}
 
 	routerArticleV1 := r.Group("api/v1/article")
+	routerArticleV1.Use(middleware.JWTAuth())
 	{
 		routerArticleV1.POST("/create", article.CreateArticle)
 		routerArticleV1.POST("/allInCategory", article.GetAllTitleCurrentCategory)
+		routerArticleV1.POST("/getArticle", article.GetArticle)
 	}
 
 	routerMenuV1 := r.Group("api/v1/menu")
+	routerMenuV1.Use(middleware.JWTAuth())
+
 	{
 		routerMenuV1.GET("/currentall", menu.GetAllMenuCurrentCategory)
 		routerMenuV1.GET("/alltop", menu.GetAllTopCategory)

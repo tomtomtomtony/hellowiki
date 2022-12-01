@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"github.com/blevesearch/bleve/v2"
 	"hellowiki/api/result"
+	"hellowiki/api/v1/article/vo"
 	"hellowiki/common"
 	"hellowiki/common/utils"
 	"hellowiki/config"
+	utils2 "hellowiki/model/utils"
 	"log"
 	"os"
 	"strconv"
@@ -25,10 +27,24 @@ var (
 	UNCLASSIFIED_ARTICLES = "unclassified_articles"
 )
 
-func HasCategoryInContentDir(categoryName string) (bool, error) {
-	return utils.HasDirectory(config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + categoryName)
+func HasArticleInContent(categoryNameId string, articleName string) bool {
+	check, _ := utils.HasMdFileInContentDir(categoryNameId, articleName)
+	return check
 }
 
+func GetArticleByName(vo vo.ConditionVO) (res Article, code int) {
+	dirName := utils2.ConstructCategoryNameId(vo.CategoryName, vo.CategoryMenuId)
+	dirAbs := config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + dirName
+	articleAbsPath := dirAbs + string(os.PathSeparator) + vo.ArticleTitle + common.MD_FILE_SUFFIX
+	articleContent, err := os.ReadFile(articleAbsPath)
+	if err != nil {
+		log.Printf("未能读取指定文件:{%v}", err)
+		return res, result.ERROR
+	}
+	res.Content = string(articleContent)
+	res.Title = vo.ArticleTitle
+	return res, result.SUCCSE
+}
 func ArticleWriteIndex(article Article, classifiedName string) int {
 	//写入索引
 	dbSearch, code := utils.OpenIndex(classifiedName)
@@ -36,7 +52,12 @@ func ArticleWriteIndex(article Article, classifiedName string) int {
 		log.Println("写入索引失败")
 		return code
 	}
-	defer dbSearch.Close()
+	defer func(dbSearch bleve.Index) {
+		err := dbSearch.Close()
+		if err != nil {
+			log.Printf("未能正确关闭索引:{%v}", err)
+		}
+	}(dbSearch)
 	docId := article.Title + common.UNDER_SCORE + strconv.FormatInt(time.Now().Unix(), 10)
 	err := dbSearch.Index(docId, article)
 	if err != nil {
@@ -49,13 +70,12 @@ func ArticleWriteDir(article Article, classifiedName string) int {
 	//写入磁盘
 	dirName := config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + classifiedName
 	//检查分类文件夹是否存在
-	checkContentDir, err := HasCategoryInContentDir(classifiedName)
+	checkContentDir, err := utils.HasCategoryInContentDir(classifiedName)
 	if !checkContentDir || err != nil {
 		log.Printf("写入磁盘错误，未能找到{%v}:{%v}\n", dirName, err)
 		return result.ERROR
 	}
-	contentPath := dirName + string(os.PathSeparator) + article.Title + common.UNDER_SCORE +
-		strconv.FormatInt(time.Now().Unix(), 10) + common.MD_FILE_SUFFIX
+	contentPath := dirName + string(os.PathSeparator) + article.Title + common.MD_FILE_SUFFIX
 	fileHandle, err := os.Create(contentPath)
 	if err != nil {
 		log.Fatal(err)
@@ -93,7 +113,12 @@ func GetAllInAIndex(pageSize int, pageNum int, indexName string) (bleve.SearchRe
 	if code != result.SUCCSE {
 		return bleve.SearchResult{}, code
 	}
-	defer dbSearch.Close()
+	defer func(dbSearch bleve.Index) {
+		err := dbSearch.Close()
+		if err != nil {
+			log.Printf("未能正确关闭索引:{%v}", err)
+		}
+	}(dbSearch)
 	query := bleve.NewMatchAllQuery()
 	searchRequest := bleve.NewSearchRequest(query)
 	searchRequest.Size = pageSize
@@ -108,7 +133,12 @@ func GetAllArticleTitleInCategory(indexName string) (bleve.SearchResult, int) {
 	if code != result.SUCCSE {
 		return bleve.SearchResult{}, code
 	}
-	defer dbSearch.Close()
+	defer func(dbSearch bleve.Index) {
+		err := dbSearch.Close()
+		if err != nil {
+			log.Printf("未能正确关闭索引:{%v}", err)
+		}
+	}(dbSearch)
 	query := bleve.NewMatchAllQuery()
 	searchRequest := bleve.NewSearchRequest(query)
 	searchRequest.Fields = []string{"id"}

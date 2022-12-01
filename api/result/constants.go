@@ -24,11 +24,19 @@ const (
 	ERROR_ARTICLE_DATABASE_Index_NOT_FOUND = 2004
 
 	//文章模块
-
+	ERROR_ARTICLE_NOT_FOUND = 3001
+	//jwt错误
+	ERROR_TOKEN_EXPIRED            = 4001
+	ERROR_TOKEN_EXPIRED_MaxRefresh = 4002
+	ERROR_TOKEN_MALFORMED          = 4003
+	ERROR_TOKEN_INVALID            = 4004
+	ERROR_HEADER_EMPTY             = 4005
+	ERROR_HEADER_MALFORMED         = 4006
+	ERROR_TOKEN_NOT_FOUND          = 4007
 )
 
 var codeMsg = map[int]string{
-	SUCCSE:                                 "OK",
+	SUCCSE:                                 "操作成功",
 	ERROR:                                  "FAIL",
 	ERROR_USERNAME_USED:                    "用户已存在",
 	ERROR_USER_NOT_FOUND:                   "用户不存在",
@@ -36,6 +44,14 @@ var codeMsg = map[int]string{
 	ERROR_CATEGORY_NOT_FOUND:               "该分类不存在",
 	ERROR_PARENT_CATEGORY_NOT_FOUND:        "指定的上级菜单不存在",
 	ERROR_ARTICLE_DATABASE_Index_NOT_FOUND: "数据库错误:分类存储表未找到",
+	ERROR_TOKEN_EXPIRED:                    "令牌已过期",
+	ERROR_TOKEN_EXPIRED_MaxRefresh:         "令牌已过最大刷新时间",
+	ERROR_TOKEN_MALFORMED:                  "请求令牌格式有误",
+	ERROR_TOKEN_INVALID:                    "请求令牌无效",
+	ERROR_HEADER_EMPTY:                     "需要认证才能访问",
+	ERROR_HEADER_MALFORMED:                 "请求头中 Authorization 格式有误",
+	ERROR_TOKEN_NOT_FOUND:                  "请求未携带令牌，无权限访问",
+	ERROR_ARTICLE_NOT_FOUND:                "指定文章未找到",
 }
 
 func GetMsg(code int) string {

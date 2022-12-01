@@ -17,7 +17,7 @@ import (
 
 func init() {
 	//初始化数据目录
-	check, err := utils.HasDirectory(config.Cfg.DataDir.Location)
+	check, err := utils.HasDirectoryOrFile(config.Cfg.DataDir.Location)
 	if err != nil {
 		log.Fatalf("未能检查data文件夹:{%v}", err)
 	}
@@ -36,7 +36,7 @@ func init() {
 func initDataBase() {
 	//初始化数据库目录
 	config.Cfg.DataBase.AbsPath = config.Cfg.DataDir.Location + string(os.PathSeparator) + config.Cfg.DataBase.Location
-	check, err := utils.HasDirectory(config.Cfg.DataBase.AbsPath)
+	check, err := utils.HasDirectoryOrFile(config.Cfg.DataBase.AbsPath)
 	if err != nil {
 		log.Fatalf("未能检查data文件夹:{%v}", err)
 	}
@@ -68,7 +68,7 @@ func initDataBase() {
 func initIndexDir() {
 	//初始化索引目录
 	config.Cfg.SearchDB.AbsPath = config.Cfg.DataDir.Location + string(os.PathSeparator) + config.Cfg.SearchDB.Location
-	check, err := utils.HasDirectory(config.Cfg.SearchDB.AbsPath)
+	check, err := utils.HasDirectoryOrFile(config.Cfg.SearchDB.AbsPath)
 	if err != nil {
 		log.Fatalf("未能检查index文件夹:{%v}", err)
 	}
@@ -106,7 +106,7 @@ func initIndexDir() {
 func initContentDir() {
 	//初始化文章存储
 	config.Cfg.DirDB.AbsPath = config.Cfg.DataDir.Location + string(os.PathSeparator) + config.Cfg.DirDB.Location
-	check, err := utils.HasDirectory(config.Cfg.DirDB.AbsPath)
+	check, err := utils.HasDirectoryOrFile(config.Cfg.DirDB.AbsPath)
 	if err != nil {
 		log.Fatalf("未能检查index文件夹:{%v}", err)
 	}

@@ -24,7 +24,7 @@ func GetAllDirectMenuChildren(id uint) []Menu {
 	err := dbBase.Limit(500).Where("parent_id=?", id).Find(&menus).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		log.Fatalf("查找id为{%v}的直接子类时，出现错误:{%v}\n", id, err)
-		return []Menu{}
+		return menus
 	}
 	return menus
 }
@@ -35,7 +35,7 @@ func GetTopLevelMenu() []Menu {
 	err := dbBase.Limit(500).Where("parent_id=0").Find(&menus).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		log.Fatalf("查询顶级分类时出现错误:{%v}\n", err)
-		return []Menu{}
+		return menus
 	}
 	return menus
 }

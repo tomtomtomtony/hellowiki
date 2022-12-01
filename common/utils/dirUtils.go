@@ -4,24 +4,26 @@ import (
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/mapping"
 	"hellowiki/api/result"
+	"hellowiki/common"
 	"hellowiki/config"
 	"io"
 	"log"
 	"os"
 )
 
-func HasDirectory(path string) (bool, error) {
+func HasDirectoryOrFile(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
-		return true, nil
+		return true, err
 	}
 	if os.IsNotExist(err) {
-		return false, nil
+		return false, err
 	}
 	return false, err
 }
 
 func FoldIsEmptyInContent(foldName string) bool {
+
 	absPath := config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + foldName
 	dir, err := os.Open(absPath)
 	if err != nil {
@@ -65,7 +67,7 @@ func CreateFoldContent(foldName string) int {
 }
 
 func OpenIndex(indexName string) (bleve.Index, int) {
-	_, err := HasCategoryIndex(indexName)
+	_, err := HasCategoryInIndexDir(indexName)
 	if err != nil {
 		return nil, result.ERROR
 	}
@@ -78,6 +80,15 @@ func OpenIndex(indexName string) (bleve.Index, int) {
 	return dbSearch, result.SUCCSE
 }
 
-func HasCategoryIndex(indexName string) (bool, error) {
-	return HasDirectory(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + indexName)
+func HasCategoryInIndexDir(indexName string) (bool, error) {
+	return HasDirectoryOrFile(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + indexName)
+}
+
+func HasCategoryInContentDir(categoryName string) (bool, error) {
+	return HasDirectoryOrFile(config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + categoryName)
+}
+
+func HasMdFileInContentDir(categoryNameId string, mdFileName string) (bool, error) {
+	return HasDirectoryOrFile(config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + categoryNameId + string(os.PathSeparator) + mdFileName + common.MD_FILE_SUFFIX)
+
 }

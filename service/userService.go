@@ -4,9 +4,27 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"hellowiki/api/result"
 	"hellowiki/api/v1/user/vo"
+	"hellowiki/common/utils"
 	"hellowiki/model"
 	"log"
 )
+
+func UserLogin(condition vo.LoginUserVO) (userName string, token string, code int) {
+	userInfo := model.FindByName(condition.UserName)
+	if (model.RegUser{}) == userInfo {
+		log.Println("用户不存在")
+		return "", "", result.ERROR_USER_NOT_FOUND
+	}
+	inputPwd := []byte(condition.PassWord)
+	dbFindPwd := []byte(userInfo.PassWord)
+	err := bcrypt.CompareHashAndPassword(dbFindPwd, inputPwd)
+	if err != nil {
+		log.Println("密码不正确")
+		return "", "", result.ERROR_PASSWORD_WRONG
+	}
+	token = utils.NewJWT().IssueToken(userInfo.UserName)
+	return userInfo.UserName, token, result.SUCCSE
+}
 
 func CreateUser(condition vo.RegUserVO) (code int) {
 	var userInfo = vo2Do(condition)
@@ -16,12 +34,15 @@ func CreateUser(condition vo.RegUserVO) (code int) {
 	}
 	//密码加密
 	userInfo.PassWord = pswCrypt(userInfo.PassWord)
+	//默认启用账号
+	userInfo.IsEnable = true
 	codeInsert := model.CreateUser(userInfo)
 	if codeInsert != result.SUCCSE {
 		return codeInsert
 	}
 	return codeInsert
 }
+
 func vo2Do(userVo vo.RegUserVO) model.RegUser {
 	var do model.RegUser
 	do.UserName = userVo.UserName

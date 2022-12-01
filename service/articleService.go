@@ -11,6 +11,24 @@ import (
 	"strings"
 )
 
+func GetArticle(conditionVO vo.ConditionVO) (res model.Article, code int) {
+	categoryNameId := utils.ConstructCategoryNameId(conditionVO.CategoryName, conditionVO.CategoryMenuId)
+	if !HasCategoryInContent(categoryNameId) {
+		code = result.ERROR_CATEGORY_NOT_FOUND
+		return res, code
+	}
+	if !model.HasArticleInContent(categoryNameId, conditionVO.ArticleTitle) {
+		code = result.ERROR_ARTICLE_NOT_FOUND
+		return res, code
+	}
+	res, code = model.GetArticleByName(conditionVO)
+	if code != result.SUCCSE {
+		return res, code
+	}
+	code = result.SUCCSE
+	return res, code
+}
+
 func CreateArticle(condition vo.ConditionVO) int {
 	if !HasCategoryInDBTable(condition.CategoryMenuId) {
 		return result.ERROR_CATEGORY_NOT_FOUND

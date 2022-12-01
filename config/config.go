@@ -4,16 +4,18 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"log"
+	"time"
 )
 
 type tomlConfig struct {
-	DataBase dataBase
-	SearchDB searchDB
-	DirDB    dirDB
-	WikiInfo wikiInfo
-	Server   server
-	Analyze  analyze
-	DataDir  dataDir
+	DataBase  dataBase
+	SearchDB  searchDB
+	DirDB     dirDB
+	WikiInfo  wikiInfo
+	Server    server
+	Analyze   analyze
+	DataDir   dataDir
+	JwtConfig jwtConfig
 }
 
 type dataBase struct {
@@ -50,6 +52,13 @@ type wikiInfo struct {
 type server struct {
 	AppMode string
 	Port    string
+}
+
+type jwtConfig struct {
+	SecretKey           string
+	TokenExpireDuration time.Duration
+	Issuer              string
+	MaxRefreshTime      time.Duration
 }
 
 var Cfg *tomlConfig

@@ -52,7 +52,7 @@ func HasCategoryTable(tableName string) bool {
 }
 
 func HasCategoryInIndexDir(categoryName string) (bool, error) {
-	return utils2.HasDirectory(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + categoryName)
+	return utils2.HasDirectoryOrFile(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + categoryName)
 }
 
 //
