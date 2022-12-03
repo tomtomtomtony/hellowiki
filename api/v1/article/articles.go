@@ -30,12 +30,16 @@ func GetAllTitleCurrentCategory(c *gin.Context) {
 func GetArticle(c *gin.Context) {
 	var article vo.ConditionVO
 	_ = c.ShouldBind(&article)
-	rawData, code := service.GetArticle(article)
+	res, code := service.GetArticle(article)
 	if code != result.SUCCSE {
 		result.RestFulResult(c, code)
 	}
-	var res vo.ResultVo
-	res.Title = rawData.Title
-	res.Content = rawData.Content
 	result.RestFulResult(c, code, res)
+}
+
+func DelArticle(c *gin.Context) {
+	var article vo.ConditionVO
+	_ = c.ShouldBind(&article)
+	code := service.DeleteArticle(article)
+	result.RestFulResult(c, code)
 }

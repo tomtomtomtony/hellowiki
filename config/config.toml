@@ -15,7 +15,7 @@ Port=":8080"
 [analyze]
 Dict="embed, zh"
 [dataDir]
-Location="./data/"
+Location="./data"
 [jwtConfig]
 SecretKey="hellowiki7998"
 TokenExpireDuration="60m"

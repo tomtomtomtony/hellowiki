@@ -76,16 +76,6 @@ func DeleteCategoryInContent(categoryName string) int {
 	return utils2.DeleteFold(config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + categoryName)
 }
 
-// 根据id，软删除分类信息
-func DeleteCategoryById(id uint) int {
-	dbBase := utils2.OpenDB()
-	err := dbBase.Delete(&Category{}, "id=?", id).Error
-	if err != nil {
-		return result.ERROR
-	}
-	return result.SUCCSE
-}
-
 // 根据id，更新分类信息
 func UpdateCategoryById(id uint, category Category) int {
 	dbBase := utils2.OpenDB()

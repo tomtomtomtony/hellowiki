@@ -93,11 +93,12 @@ func DeleteCategory(condition vo.ConditionVO) int {
 		return result.ERROR
 	}
 	tx.Commit()
-	//2.删除markdown文件
+
+	//2.删除txt文件
 	dirName := utils2.ConstructCategoryNameId(category.Name, category.ID)
 	if !utils.FoldIsEmptyInContent(dirName) {
 		log.Printf("content文件夹下指定文件夹{%v}不为空", dirName)
-		return result.ERROR
+		return result.ERROR_CATEGORY_NOT_EMPTY
 	}
 	code := model.DeleteCategoryInContent(dirName)
 	if code != result.SUCCSE {

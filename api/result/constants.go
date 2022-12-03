@@ -22,7 +22,7 @@ const (
 	ERROR_CATEGORY_NOT_FOUND               = 2002
 	ERROR_PARENT_CATEGORY_NOT_FOUND        = 2003
 	ERROR_ARTICLE_DATABASE_Index_NOT_FOUND = 2004
-
+	ERROR_CATEGORY_NOT_EMPTY               = 2005
 	//文章模块
 	ERROR_ARTICLE_NOT_FOUND = 3001
 	//jwt错误
@@ -52,6 +52,7 @@ var codeMsg = map[int]string{
 	ERROR_HEADER_MALFORMED:                 "请求头中 Authorization 格式有误",
 	ERROR_TOKEN_NOT_FOUND:                  "请求未携带令牌，无权限访问",
 	ERROR_ARTICLE_NOT_FOUND:                "指定文章未找到",
+	ERROR_CATEGORY_NOT_EMPTY:               "分类下不为空",
 }
 
 func GetMsg(code int) string {

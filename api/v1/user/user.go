@@ -19,7 +19,7 @@ func Login(c *gin.Context) {
 	var res vo.LoginUserVO
 	res.Token = token
 	res.UserName = userName
-	res.Code = result.SUCCSE
+	res.Code = code
 	result.RestFulResult(c, code, res)
 }
 

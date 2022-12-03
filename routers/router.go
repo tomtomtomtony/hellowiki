@@ -37,6 +37,7 @@ func InitRouter() *gin.Engine {
 		routerArticleV1.POST("/create", article.CreateArticle)
 		routerArticleV1.POST("/allInCategory", article.GetAllTitleCurrentCategory)
 		routerArticleV1.POST("/getArticle", article.GetArticle)
+		routerArticleV1.POST("del", article.DelArticle)
 	}
 
 	routerMenuV1 := r.Group("api/v1/menu")

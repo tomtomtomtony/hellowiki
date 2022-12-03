@@ -33,7 +33,7 @@ func GetAllTopCategory() []vo.TopMenu {
 
 func data2Vo(menu model.Menu) vo.MenuVO {
 	var res vo.MenuVO
-	res.ParentId = menu.ParentId
+	res.ParentMenuId = menu.ParentId
 	res.Id = menu.ID
 	res.ParentName = menu.ParentName
 	res.Name = menu.Name

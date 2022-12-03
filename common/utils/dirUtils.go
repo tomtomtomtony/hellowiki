@@ -48,7 +48,7 @@ func WriteToIndexDir(indexName string, mapping mapping.IndexMapping) int {
 	return result.SUCCSE
 }
 
-// 删除data/index指定目录
+// 删除指定目录
 func DeleteFold(absPath string) int {
 	err := os.RemoveAll(absPath)
 	if err != nil {
@@ -89,6 +89,6 @@ func HasCategoryInContentDir(categoryName string) (bool, error) {
 }
 
 func HasMdFileInContentDir(categoryNameId string, mdFileName string) (bool, error) {
-	return HasDirectoryOrFile(config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + categoryNameId + string(os.PathSeparator) + mdFileName + common.MD_FILE_SUFFIX)
+	return HasDirectoryOrFile(config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + categoryNameId + string(os.PathSeparator) + mdFileName + common.TXT_FILE_SUFFIX)
 
 }

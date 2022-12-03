@@ -5,13 +5,47 @@ import (
 	"hellowiki/api/result"
 	"hellowiki/api/v1/article/vo"
 	"hellowiki/common"
+	utils2 "hellowiki/common/utils"
 	"hellowiki/model"
 	"hellowiki/model/utils"
 	"log"
 	"strings"
+	"time"
 )
 
-func GetArticle(conditionVO vo.ConditionVO) (res model.Article, code int) {
+func DeleteArticle(conditionVO vo.ConditionVO) (code int) {
+	//1.删除content下的文件
+	dirName := utils.ConstructCategoryNameId(conditionVO.CategoryName, conditionVO.CategoryMenuId)
+	code = model.DeleteArticleByAbsPath(conditionVO)
+	if code != result.SUCCSE {
+		log.Println("content文件夹下指定文件夹删除失败")
+		return result.ERROR
+	}
+
+	//2.删除索引文件
+	indexName := dirName
+	if !HasCategoryInIndex(indexName) {
+		log.Println("index文件夹下指定文件夹不存在")
+		return result.ERROR
+	}
+	code = model.DeleteArticleInIndex(conditionVO)
+	if code != result.SUCCSE {
+		log.Println("index文件夹下指定文章删除失败")
+		return result.ERROR
+	}
+
+	//3.删除数据库中记录
+	dbBase := utils2.OpenDB()
+	tx := dbBase.Begin()
+	if err := tx.Delete(&model.Menu{}, "id=?", conditionVO.ArticleId).Error; err != nil {
+		tx.Rollback()
+		return result.ERROR
+	}
+	tx.Commit()
+	return result.SUCCSE
+}
+
+func GetArticle(conditionVO vo.ConditionVO) (res string, code int) {
 	categoryNameId := utils.ConstructCategoryNameId(conditionVO.CategoryName, conditionVO.CategoryMenuId)
 	if !HasCategoryInContent(categoryNameId) {
 		code = result.ERROR_CATEGORY_NOT_FOUND
@@ -39,12 +73,13 @@ func CreateArticle(condition vo.ConditionVO) int {
 	}
 	var article model.Article
 	article = voTDo(condition)
+	article.CreateAt = time.Now().Unix()
+	//code := model.ArticleWriteIndex(article, IndexName)
+	//if code != result.SUCCSE {
+	//	return code
+	//}
 
-	code := model.ArticleWriteIndex(article, IndexName)
-	if code != result.SUCCSE {
-		return code
-	}
-	code = model.ArticleWriteDir(article, IndexName)
+	code := model.ArticleWriteDir(article, IndexName)
 	if code != result.SUCCSE {
 		return code
 	}

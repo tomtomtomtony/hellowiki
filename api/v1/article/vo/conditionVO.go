@@ -13,7 +13,7 @@ type ConditionVO struct {
 	ParentLevel    uint      `json:"parentLevel"`
 	Path           string    `json:"path"`
 	Author         string    `json:"author"`
-	Tag            list.List `json:"tag"`
+	Keywords       list.List `json:"keywords"`
 }
 
 type ResultVo struct {

@@ -19,7 +19,7 @@ func init() {
 	//初始化数据目录
 	check, err := utils.HasDirectoryOrFile(config.Cfg.DataDir.Location)
 	if err != nil {
-		log.Fatalf("未能检查data文件夹:{%v}", err)
+		log.Printf("未能检测到data文件夹:{%v}\n", err)
 	}
 	if !check {
 		if err := os.Mkdir(config.Cfg.DataDir.Location, os.ModePerm); err != nil {
@@ -38,7 +38,7 @@ func initDataBase() {
 	config.Cfg.DataBase.AbsPath = config.Cfg.DataDir.Location + string(os.PathSeparator) + config.Cfg.DataBase.Location
 	check, err := utils.HasDirectoryOrFile(config.Cfg.DataBase.AbsPath)
 	if err != nil {
-		log.Fatalf("未能检查data文件夹:{%v}", err)
+		log.Printf("未能检测到data文件夹:{%v}", err)
 	}
 	if !check {
 		if err := os.Mkdir(config.Cfg.DataBase.AbsPath, os.ModePerm); err != nil {
@@ -70,7 +70,7 @@ func initIndexDir() {
 	config.Cfg.SearchDB.AbsPath = config.Cfg.DataDir.Location + string(os.PathSeparator) + config.Cfg.SearchDB.Location
 	check, err := utils.HasDirectoryOrFile(config.Cfg.SearchDB.AbsPath)
 	if err != nil {
-		log.Fatalf("未能检查index文件夹:{%v}", err)
+		log.Printf("未能检测到index文件夹:{%v}", err)
 	}
 	if !check {
 		if err := os.Mkdir(config.Cfg.SearchDB.AbsPath, os.ModePerm); err != nil {
@@ -108,7 +108,7 @@ func initContentDir() {
 	config.Cfg.DirDB.AbsPath = config.Cfg.DataDir.Location + string(os.PathSeparator) + config.Cfg.DirDB.Location
 	check, err := utils.HasDirectoryOrFile(config.Cfg.DirDB.AbsPath)
 	if err != nil {
-		log.Fatalf("未能检查index文件夹:{%v}", err)
+		log.Printf("未能检测到index文件夹:{%v}", err)
 	}
 	if !check {
 		if err := os.Mkdir(config.Cfg.DirDB.AbsPath, os.ModePerm); err != nil {
