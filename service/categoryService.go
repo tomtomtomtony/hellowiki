@@ -19,21 +19,22 @@ func CreateCategory(condition vo.CategoryVO) (code int) {
 	if 0 == len(condition.ParentPath) {
 		condition.ParentPath = config.Cfg.DirDB.AbsPath
 	}
-	//当前文件夹下是否已存在同名文件夹
-	check, _ := utils.HasDirectoryOrFile(condition.Path + string(os.PathSeparator) + condition.Name)
+	absPathInContent := condition.ParentPath + string(os.PathSeparator) + condition.Name
+	//文件夹下是否已存在同名文件夹
+	check, _ := utils.HasDirectoryOrFile(absPathInContent)
 	if check {
 		return result.ERROR_CATEGORY_EXIST
 	}
 
 	//写入磁盘文件夹
-	code = model.WriteToContentDir(condition.Path, condition.Name)
+	code = model.WriteToContentDir(absPathInContent)
 	if code != result.SUCCSE {
 		log.Println("新增分类写入磁盘失败")
 		return result.ERROR
 	}
+
 	//写入索引文件
 	indexName := condition.Name
-
 	tokenOpt := map[string]interface{}{
 		"dicts":     config.Cfg.Analyze.Dict,
 		"stop":      "",
@@ -44,7 +45,7 @@ func CreateCategory(condition vo.CategoryVO) (code int) {
 		"tokenizer": searchConfig.TokenName,
 	}
 	articlesMapping := utils2.BuildArticleMapping(tokenOpt)
-	indexParentPath := strings.Replace(condition.Path, config.Cfg.DirDB.AbsPath, config.Cfg.SearchDB.AbsPath, -1)
+	indexParentPath := strings.Replace(absPathInContent, config.Cfg.DirDB.AbsPath, config.Cfg.SearchDB.AbsPath, -1)
 	code = model.WriteToCategoryIndex(indexParentPath, indexName, articlesMapping)
 	if code != result.SUCCSE {
 		return code
@@ -117,6 +118,7 @@ func GetDirectChildren(currentPath string) []vo.CategoryVO {
 }
 func do2Vo(do fs.DirEntry, parentPath string) vo.CategoryVO {
 	var res vo.CategoryVO
+
 	res.Name = do.Name()
 	res.ParentName = ""
 	if do.IsDir() {

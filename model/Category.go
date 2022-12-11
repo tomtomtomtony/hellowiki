@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/blevesearch/bleve/v2/mapping"
+	"hellowiki/api/result"
 	utils2 "hellowiki/common/utils"
 	"hellowiki/config"
 	"io/fs"
@@ -32,8 +33,13 @@ func WriteToCategoryIndex(parentPath string, indexName string, mapping mapping.I
 }
 
 // data/content下分类文件夹写入
-func WriteToContentDir(parentPath string, categoryName string) int {
-	return utils2.CreateFoldContent(parentPath, categoryName)
+func WriteToContentDir(absPath string) int {
+	err := os.Mkdir(absPath, os.ModePerm)
+	if err != nil {
+		return result.ERROR
+	}
+	return result.SUCCSE
+
 }
 
 // 索引文件夹删除
