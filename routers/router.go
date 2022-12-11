@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"hellowiki/api/v1/article"
 	"hellowiki/api/v1/category"
-	"hellowiki/api/v1/menu"
 	"hellowiki/api/v1/user"
 	"hellowiki/middleware"
 )
@@ -20,7 +19,9 @@ func InitRouter() *gin.Engine {
 		routerUserV1.POST("/login", user.Login)
 		routerUserV1.GET("/all", user.QueryAllUserInfo)
 		routerUserV1.DELETE("/del/:id", user.DeleteUser)
-		routerUserV1.PUT("/edt/:id", user.SetUserName)
+		routerUserV1.PUT("/editName/:id", user.SetUserName)
+		routerUserV1.PUT("/editRole/:id", user.SetUserRoles)
+
 	}
 	//分类模块
 	routerCategoryV1 := r.Group("api/v1/category")
@@ -28,7 +29,8 @@ func InitRouter() *gin.Engine {
 	{
 		routerCategoryV1.POST("/create", category.CreateCategory)
 		routerCategoryV1.POST("/del", category.DeleteCategory)
-		routerCategoryV1.PUT("/rename/:id", category.ReNameCategory)
+		routerCategoryV1.GET("/getTop", category.GetAllTopCategory)
+		routerCategoryV1.GET("/currentall", category.GetNextLevelMenu)
 	}
 
 	routerArticleV1 := r.Group("api/v1/article")
@@ -37,16 +39,9 @@ func InitRouter() *gin.Engine {
 		routerArticleV1.POST("/create", article.CreateArticle)
 		routerArticleV1.POST("/allInCategory", article.GetAllTitleCurrentCategory)
 		routerArticleV1.POST("/getArticle", article.GetArticle)
-		routerArticleV1.POST("del", article.DelArticle)
+		routerArticleV1.POST("/del", article.DelArticle)
+		routerArticleV1.POST("/update", article.UpdateArticle)
 	}
 
-	routerMenuV1 := r.Group("api/v1/menu")
-	routerMenuV1.Use(middleware.JWTAuth())
-
-	{
-		routerMenuV1.GET("/currentall", menu.GetAllMenuCurrentCategory)
-		routerMenuV1.GET("/alltop", menu.GetAllTopCategory)
-
-	}
 	return r
 }

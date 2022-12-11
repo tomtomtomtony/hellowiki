@@ -59,7 +59,7 @@ func initDataBase() {
 		log.Fatalf("fail to connect database:{%v}", err)
 	}
 	dbBase.Set("gorm:table_options", "AUTO_INCREMENT=1")
-	err = dbBase.AutoMigrate(RegUser{}, Menu{})
+	err = dbBase.AutoMigrate(RegUser{})
 	if err != nil {
 		log.Fatalf("建表失败")
 	}

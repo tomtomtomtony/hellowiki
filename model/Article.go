@@ -7,19 +7,17 @@ import (
 	"github.com/blevesearch/bleve/v2"
 	"hellowiki/api/result"
 	"hellowiki/api/v1/article/vo"
-	"hellowiki/common"
 	"hellowiki/common/utils"
 	"hellowiki/config"
-	utils2 "hellowiki/model/utils"
 	"log"
 	"os"
+	"strings"
 )
 
 type Article struct {
 	Title    string    `json:"title"`
 	Content  string    `json:"content"`
 	Img      string    `json:"img"`
-	Desc     string    `json:"desc"`
 	KeyWords list.List `json:"keyWords"`
 	Author   string    `json:"author"`
 	CreateAt int64     `json:"createAt"`
@@ -29,16 +27,9 @@ var (
 	UNCLASSIFIED_ARTICLES = "unclassified_articles"
 )
 
-func HasArticleInContent(categoryNameId string, articleName string) bool {
-	check, _ := utils.HasMdFileInContentDir(categoryNameId, articleName)
-	return check
-}
+func GetArticleByName(articlePath string) (res string, code int) {
 
-func GetArticleByName(vo vo.ConditionVO) (res string, code int) {
-	dirName := utils2.ConstructCategoryNameId(vo.CategoryName, vo.CategoryMenuId)
-	dirAbs := config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + dirName
-	articleAbsPath := dirAbs + string(os.PathSeparator) + vo.ArticleTitle + common.JSON_FILE_SUFFIX
-	articleContent, err := os.ReadFile(articleAbsPath)
+	articleContent, err := os.ReadFile(articlePath)
 	if err != nil {
 		log.Printf("未能读取指定文件:{%v}", err)
 		return res, result.ERROR
@@ -47,11 +38,9 @@ func GetArticleByName(vo vo.ConditionVO) (res string, code int) {
 	return res, result.SUCCSE
 }
 
-func DeleteArticleByAbsPath(vo vo.ConditionVO) (code int) {
-	dirName := utils2.ConstructCategoryNameId(vo.CategoryName, vo.CategoryMenuId)
-	dirAbs := config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + dirName
-	articleAbsPath := dirAbs + string(os.PathSeparator) + vo.ArticleTitle + common.JSON_FILE_SUFFIX
-	code = utils.DeleteFold(articleAbsPath)
+func DeleteArticleByAbsPath(absPath string) (code int) {
+
+	code = utils.DeleteFold(absPath)
 	if code != result.SUCCSE {
 		log.Printf("删除失败")
 		return code
@@ -60,9 +49,9 @@ func DeleteArticleByAbsPath(vo vo.ConditionVO) (code int) {
 }
 
 func DeleteArticleInIndex(vo vo.ConditionVO) (code int) {
-	classifiedName := utils2.ConstructCategoryNameId(vo.CategoryName, vo.CategoryMenuId)
+	classifiedPathInIndexDir := strings.Replace(vo.ParentPath, config.Cfg.DirDB.AbsPath, config.Cfg.SearchDB.AbsPath, -1)
 	//在指定索引删除文章记录
-	dbSearch, code := utils.OpenIndex(classifiedName)
+	dbSearch, code := utils.OpenIndex(classifiedPathInIndexDir)
 	if code != result.SUCCSE {
 		log.Println("写入索引失败")
 		return code
@@ -75,7 +64,9 @@ func DeleteArticleInIndex(vo vo.ConditionVO) (code int) {
 	}(dbSearch)
 	docId := vo.ArticleTitle
 	err := dbSearch.Delete(docId)
-	if err != nil {
+	if err == bleve.ErrorEmptyID {
+		log.Printf("该文章未创建索引:{%v}", err)
+	} else if err != nil && err != bleve.ErrorEmptyID {
 		log.Printf("未能删除index中文章记录:{%v}", err)
 		return result.ERROR
 	}
@@ -103,17 +94,9 @@ func ArticleWriteIndex(article Article, classifiedName string) int {
 	return result.SUCCSE
 }
 
-func ArticleWriteDir(article Article, classifiedName string) int {
-	//写入磁盘
-	dirName := config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + classifiedName
-	//检查分类文件夹是否存在
-	checkContentDir, err := utils.HasCategoryInContentDir(classifiedName)
-	if !checkContentDir || err != nil {
-		log.Printf("写入磁盘错误，未能找到{%v}:{%v}\n", dirName, err)
-		return result.ERROR
-	}
-	contentPath := dirName + string(os.PathSeparator) + article.Title + common.JSON_FILE_SUFFIX
-	fileHandle, err := os.Create(contentPath)
+func ArticleWriteDir(article Article, path string) int {
+
+	fileHandle, err := os.Create(path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -132,17 +115,6 @@ func ArticleWriteDir(article Article, classifiedName string) int {
 	}
 	if err := fileHandle.Close(); err != nil {
 		log.Fatalf("未能正确关闭文件:{%v}", err)
-		return result.ERROR
-	}
-	return result.SUCCSE
-}
-
-func ArticleWriteMenu(menu Menu) int {
-	//写入数据库菜单表
-	dbBase := utils.OpenDB()
-	err := dbBase.Create(&menu).Error
-	if err != nil {
-		log.Fatalf("写入数据库失败:{%v}", err)
 		return result.ERROR
 	}
 	return result.SUCCSE
@@ -185,4 +157,37 @@ func GetAllArticleTitleInCategory(indexName string) (bleve.SearchResult, int) {
 	searchRequest.Fields = []string{"id"}
 	searchResult, _ := dbSearch.Search(searchRequest)
 	return *searchResult, result.SUCCSE
+}
+func ArticleUpdateInContent(articleAbsPath string, article Article) (code int) {
+	fHandle, err := os.OpenFile(articleAbsPath, os.O_WRONLY|os.O_TRUNC, 0666)
+	if err != nil {
+		log.Printf("未能打开指定的文章{%v}:{%v}\n", articleAbsPath, err)
+		return result.ERROR
+	}
+	//清空文件
+	err = fHandle.Truncate(0)
+	if err != nil {
+		log.Printf("清空文件失败:{%v}", err)
+		return result.ERROR
+	}
+	fHandle.Seek(0, 0)
+	write := bufio.NewWriter(fHandle)
+	articleJson, err := json.Marshal(article)
+	if err != nil {
+		log.Printf("将输入内容转换为json格式失败:{%v}", err)
+		return result.ERROR
+	}
+	if _, err = write.WriteString(string(articleJson)); err != nil {
+		log.Fatalf("写入磁盘错误，未能存储指定文章:{%v}", err)
+	}
+	if err := write.Flush(); err != nil {
+		// failed to encode
+		log.Fatalf("刷入磁盘错误，未能存储指定文章:{%v}", err)
+		return result.ERROR
+	}
+	if err := fHandle.Close(); err != nil {
+		log.Fatalf("未能正确关闭文件:{%v}", err)
+		return result.ERROR
+	}
+	return result.SUCCSE
 }

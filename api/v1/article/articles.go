@@ -15,6 +15,13 @@ func CreateArticle(c *gin.Context) {
 	result.RestFulResult(c, code)
 }
 
+func UpdateArticle(c *gin.Context) {
+	var article vo.ConditionVO
+	_ = c.ShouldBind(&article)
+	code := service.UpdateArticle(article)
+	result.RestFulResult(c, code)
+}
+
 // 获取一个分类下所有文章
 func GetAllTitleCurrentCategory(c *gin.Context) {
 	var condition vo.ConditionVO

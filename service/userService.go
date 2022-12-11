@@ -7,11 +7,12 @@ import (
 	"hellowiki/common/utils"
 	"hellowiki/model"
 	"log"
+	"reflect"
 )
 
 func UserLogin(condition vo.LoginUserVO) (userName string, token string, code int) {
 	userInfo := model.FindByName(condition.UserName)
-	if (model.RegUser{}) == userInfo {
+	if reflect.DeepEqual(userInfo, model.RegUser{}) {
 		log.Println("用户不存在")
 		return "", "", result.ERROR_USER_NOT_FOUND
 	}
@@ -66,9 +67,25 @@ func pswCrypt(password string) string {
 	return string(hash)
 }
 
-func SetUser(id uint, condition model.RegUser) int {
+func SetUserName(id uint, condition vo.RegUserVO) int {
 	if model.HasUserById(id) == result.SUCCSE {
 		return result.ERROR_USER_NOT_FOUND
 	}
-	return model.UpdateUserById(id, condition)
+	return model.UpdateUserById(id, "user_name", condition.UserName)
+}
+
+func SetRoles(id uint, condition vo.RegUserVO) int {
+	if model.HasUserById(id) == result.SUCCSE {
+		return result.ERROR_USER_NOT_FOUND
+	}
+	return model.UpdateUserById(id, "roles", condition.Roles)
+}
+
+func regUserVo2Do(vo vo.RegUserVO) model.RegUser {
+	var res model.RegUser
+	res.UserName = vo.UserName
+	res.PassWord = vo.PassWord
+	res.IsEnable = vo.IsEnable
+	res.Roles = vo.Roles
+	return res
 }

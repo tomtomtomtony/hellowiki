@@ -8,9 +8,10 @@ import (
 
 type RegUser struct {
 	gorm.Model
-	UserName string `gorm:"type:varchar(20);not null " json:"userName"`
-	PassWord string `gorm:"type:varchar(30);not null " json:"passWord"`
+	UserName string `gorm:"type:varchar(32);not null " json:"userName"`
+	PassWord string `gorm:"type:varchar(64);not null " json:"passWord"`
 	IsEnable bool   `gorm:"type:boolean;not null" json:"isEnable"`
+	Roles    string `gorm:"type:varchar(128);not null" json:"roles"`
 }
 
 func HasUserById(id uint) (code int) {
@@ -69,9 +70,9 @@ func DeleteUserById(id int) int {
 }
 
 // 根据id，更新用户信息
-func UpdateUserById(id uint, regUser RegUser) int {
+func UpdateUserById(id uint, columnName string, columnValue string) int {
 	dbBase := utils2.OpenDB()
-	err := dbBase.Model(&regUser).Where("id=?", id).Updates(regUser).Error
+	err := dbBase.Model(&RegUser{}).Where("id=?", id).Update(columnName, columnValue).Error
 	if err != nil {
 		return result.ERROR
 	}

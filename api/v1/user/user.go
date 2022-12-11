@@ -45,18 +45,43 @@ func QueryAllUserInfo(c *gin.Context) {
 	pageSize, _ = strconv.Atoi(c.Query("pageSize"))
 	pageNum, _ = strconv.Atoi(c.Query("pageNum"))
 	data := service.GetAllRegUserInfo(pageSize, pageNum)
-	result.RestFulResult(c, result.SUCCSE, data)
+	var res []vo.ResultVO
+	for i := 0; i < len(data); i++ {
+		res = append(res, do2ResultVo(data[i]))
+	}
+	result.RestFulResult(c, result.SUCCSE, res)
 }
 
 func SetUserName(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	var condition model.RegUser
+	var condition vo.RegUserVO
 	_ = c.ShouldBind(&condition)
-	code = service.SetUser(uint(id), condition)
+	code = service.SetUserName(uint(id), condition)
 	if code == result.ERROR_USER_NOT_FOUND {
 		result.RestFulResult(c, code)
-		log.Fatalf("用户不存在")
+		log.Printf("用户不存在")
 	}
-	result.RestFulResult(c, code, condition)
+	result.RestFulResult(c, code)
+}
+
+func SetUserRoles(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	var condition vo.RegUserVO
+	_ = c.ShouldBind(&condition)
+	code = service.SetRoles(uint(id), condition)
+	if code == result.ERROR_USER_NOT_FOUND {
+		result.RestFulResult(c, code)
+		log.Printf("用户不存在")
+	}
+	result.RestFulResult(c, code)
+}
+
+func do2ResultVo(regUser model.RegUser) vo.ResultVO {
+	var res vo.ResultVO
+	res.UserName = regUser.UserName
+	res.Id = regUser.ID
+	res.CreateAt = regUser.CreatedAt.UnixMilli()
+	res.UpdateAt = regUser.UpdatedAt.UnixMilli()
+	return res
 }

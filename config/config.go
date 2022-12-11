@@ -8,14 +8,15 @@ import (
 )
 
 type tomlConfig struct {
-	DataBase  dataBase
-	SearchDB  searchDB
-	DirDB     dirDB
-	WikiInfo  wikiInfo
-	Server    server
-	Analyze   analyze
-	DataDir   dataDir
-	JwtConfig jwtConfig
+	DataBase     dataBase
+	SearchDB     searchDB
+	DirDB        dirDB
+	WikiInfo     wikiInfo
+	Server       server
+	Analyze      analyze
+	DataDir      dataDir
+	JwtConfig    jwtConfig
+	CasbinConfig CasbinConfig
 }
 
 type dataBase struct {
@@ -33,7 +34,9 @@ type searchDB struct {
 	DefaultIndex string
 	AbsPath      string
 }
-
+type CasbinConfig struct {
+	RolesConfig string
+}
 type dirDB struct {
 	Location        string
 	DefaultDir      string

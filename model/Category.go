@@ -2,20 +2,17 @@ package model
 
 import (
 	"github.com/blevesearch/bleve/v2/mapping"
-	"gorm.io/gorm"
-	"hellowiki/api/result"
 	utils2 "hellowiki/common/utils"
 	"hellowiki/config"
+	"io/fs"
 	"log"
 	"os"
 )
 
 // 文章分类
 type Category struct {
-	gorm.Model
-	Name         string `gorm:"type:varchar(40);not null" json:"name"`
-	ParentMenuId uint   `gorm:"type:int;not null" json:"parentMenuId"`
-	ParentName   string `gorm:"type:varchar(40);not null" json:"parentName"`
+	Name       string `json:"name"`
+	ParentName string `json:"parentName"`
 }
 
 var (
@@ -23,85 +20,45 @@ var (
 	TOPLEVELCATEGORY uint = 0
 )
 
-// 顶级父类id为0
-func FindDirectCateGoryChildren(id uint) []Menu {
-	var categories []Menu
-	dbBase := utils2.OpenDB()
-	err := dbBase.Limit(500).Where("parent_id=? and type=1", id).Find(&categories).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		log.Fatalf("查找id为{%v}的直接子类时，出现错误:{%v}\n", id, err)
-		return []Menu{}
-	}
-	return categories
-}
-
-// 从数据库菜单表中查询分类
-func GetCategoryById(id uint) Menu {
-	var menu Menu
-	dbBase := utils2.OpenDB()
-	err := dbBase.Take(&menu, "id=? and type=1", id).Error
-	if err != nil {
-		return Menu{}
-	}
-	return menu
-}
-
-func HasCategoryTable(tableName string) bool {
-	dbBase := utils2.OpenDB()
-	return dbBase.Migrator().HasTable(tableName)
-}
-
-func HasCategoryInIndexDir(categoryName string) (bool, error) {
-	return utils2.HasDirectoryOrFile(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + categoryName)
+func HasCategoryInIndexDir(path string) (bool, error) {
+	return utils2.HasDirectoryOrFile(path)
 }
 
 //
 
 // 索引写入
-func WriteToCategoryIndex(indexName string, mapping mapping.IndexMapping) int {
-	return utils2.WriteToIndexDir(indexName, mapping)
+func WriteToCategoryIndex(parentPath string, indexName string, mapping mapping.IndexMapping) int {
+	return utils2.WriteToIndexDir(parentPath, indexName, mapping)
 }
 
 // data/content下分类文件夹写入
-func WriteToCategoryContent(categoryName string) int {
-	return utils2.CreateFoldContent(categoryName)
+func WriteToContentDir(parentPath string, categoryName string) int {
+	return utils2.CreateFoldContent(parentPath, categoryName)
 }
 
 // 索引文件夹删除
-func DeleteCategoryInIndex(indexName string) int {
-	return utils2.DeleteFold(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + indexName)
+func DeleteCategoryInIndex(path string) int {
+	return utils2.DeleteFold(path)
 }
 
-func DeleteCategoryInContent(categoryName string) int {
-	return utils2.DeleteFold(config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + categoryName)
+func DeleteCategoryInContent(path string) int {
+	return utils2.DeleteFold(path)
 }
 
-// 根据id，更新分类信息
-func UpdateCategoryById(id uint, category Category) int {
-	dbBase := utils2.OpenDB()
-	err := dbBase.Model(&category).Where("id=?", id).Updates(category).Error
+func GetTopLevelCategory() []fs.DirEntry {
+	filesInfo, err := os.ReadDir(config.Cfg.DirDB.AbsPath)
 	if err != nil {
-		return result.ERROR
+		log.Printf("不能读取文件夹{%v}\n", config.Cfg.DirDB.AbsPath)
+		return []fs.DirEntry{}
 	}
-	return result.SUCCSE
+	return filesInfo
 }
 
-// 根据parentId更新
-func UpdateCategoryByParentId(parentId uint, category Category) (int, error) {
-	dbBase := utils2.OpenDB()
-	err := dbBase.Model(&category).Where("parent_id=?", parentId).Updates(category).Error
+func GetNextLevelCategory(parentPath string) []fs.DirEntry {
+	filesInfo, err := os.ReadDir(parentPath)
 	if err != nil {
-		return result.ERROR, err
+		log.Printf("不能读取文件夹{%v}\n", parentPath)
+		return []fs.DirEntry{}
 	}
-	return result.SUCCSE, err
-}
-
-// 数据库写入菜单表
-func CategoryWriteToDBMenuTable(data Menu) (code int, id uint) {
-	dbBase := utils2.OpenDB()
-	err := dbBase.Create(&data).Error
-	if err != nil {
-		return result.ERROR, 0
-	}
-	return result.SUCCSE, data.ID
+	return filesInfo
 }

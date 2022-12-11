@@ -21,3 +21,5 @@ SecretKey="hellowiki7998"
 TokenExpireDuration="60m"
 Issuer="hellowikiAdmin"
 MaxRefreshTime="10m"
+[role_definition]
+g ="_, _"

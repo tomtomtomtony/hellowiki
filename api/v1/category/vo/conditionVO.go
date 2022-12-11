@@ -1,12 +1,11 @@
 package vo
 
-type ConditionVO struct {
-	MenuId       uint   `json:"menuId"`
-	Name         string `json:"name"`
-	ParentMenuId uint   `json:"parentMenuId"`
-	ParentName   string `json:"parentName"`
-	PageSize     int    `json:"pageSize"`
-	PageNum      int    `json:"pageNum"`
-	ParentLevel  uint   `json:"parentLevel"`
-	Path         string `json:"path"`
+type CategoryVO struct {
+	Name       string `json:"name"`
+	ParentName string `json:"parentName"`
+	ParentPath string `json:"parentPath"`
+	Type       string `json:"type"`
+	PageSize   int    `json:"pageSize"`
+	PageNum    int    `json:"pageNum"`
+	Path       string `json:"path"`
 }

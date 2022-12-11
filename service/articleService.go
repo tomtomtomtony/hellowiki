@@ -6,56 +6,89 @@ import (
 	"hellowiki/api/v1/article/vo"
 	"hellowiki/common"
 	utils2 "hellowiki/common/utils"
+	"hellowiki/config"
 	"hellowiki/model"
-	"hellowiki/model/utils"
 	"log"
+	"os"
 	"strings"
 	"time"
 )
 
-func DeleteArticle(conditionVO vo.ConditionVO) (code int) {
+func DeleteArticle(condition vo.ConditionVO) (code int) {
 	//1.删除content下的文件
-	dirName := utils.ConstructCategoryNameId(conditionVO.CategoryName, conditionVO.CategoryMenuId)
-	code = model.DeleteArticleByAbsPath(conditionVO)
+	//检查分类文件夹是否存在
+	checkContentDir, err := utils2.HasDirectoryOrFile(condition.ParentPath)
+	if !checkContentDir || err != nil {
+		log.Printf("未能找到{%v}:{%v}\n", condition.ParentPath, err)
+		return result.ERROR
+	}
+	//检查文章是否已存在
+	checkContentDir, err = utils2.HasDirectoryOrFile(condition.Path)
+	if !checkContentDir || os.IsNotExist(err) {
+		log.Printf("文章不存在，未能找到{%v}:{%v}\n", condition.Path, err)
+		return result.ERROR
+	}
+
+	code = model.DeleteArticleByAbsPath(condition.Path)
 	if code != result.SUCCSE {
 		log.Println("content文件夹下指定文件夹删除失败")
 		return result.ERROR
 	}
 
 	//2.删除索引文件
-	indexName := dirName
-	if !HasCategoryInIndex(indexName) {
-		log.Println("index文件夹下指定文件夹不存在")
+	articleCategoryIndexName := strings.Replace(condition.ParentPath, config.Cfg.DirDB.AbsPath, config.Cfg.SearchDB.AbsPath, -1)
+	//检查分类文件夹是否存在
+	checkContentDir, err = utils2.HasDirectoryOrFile(articleCategoryIndexName)
+	if !checkContentDir || err != nil {
+		log.Printf("未能找到{%v}:{%v}\n", condition.ParentPath, err)
 		return result.ERROR
 	}
-	code = model.DeleteArticleInIndex(conditionVO)
+
+	code = model.DeleteArticleInIndex(condition)
 	if code != result.SUCCSE {
 		log.Println("index文件夹下指定文章删除失败")
 		return result.ERROR
 	}
 
-	//3.删除数据库中记录
-	dbBase := utils2.OpenDB()
-	tx := dbBase.Begin()
-	if err := tx.Delete(&model.Menu{}, "id=?", conditionVO.ArticleId).Error; err != nil {
-		tx.Rollback()
-		return result.ERROR
-	}
-	tx.Commit()
 	return result.SUCCSE
 }
 
-func GetArticle(conditionVO vo.ConditionVO) (res string, code int) {
-	categoryNameId := utils.ConstructCategoryNameId(conditionVO.CategoryName, conditionVO.CategoryMenuId)
-	if !HasCategoryInContent(categoryNameId) {
-		code = result.ERROR_CATEGORY_NOT_FOUND
-		return res, code
+func UpdateArticle(condition vo.ConditionVO) (code int) {
+	//检查分类文件夹是否存在
+	checkContentDir, err := utils2.HasDirectoryOrFile(condition.ParentPath)
+	if !checkContentDir || err != nil {
+		log.Printf("写入磁盘错误，未能找到{%v}:{%v}\n", condition.ParentPath, err)
+		return result.ERROR
 	}
-	if !model.HasArticleInContent(categoryNameId, conditionVO.ArticleTitle) {
-		code = result.ERROR_ARTICLE_NOT_FOUND
-		return res, code
+	checkContentDir, err = utils2.HasDirectoryOrFile(condition.Path)
+	if !checkContentDir || os.IsNotExist(err) {
+		log.Printf("文章不存在，未能找到{%v}:{%v}\n", condition.Path, err)
+		return result.ERROR
 	}
-	res, code = model.GetArticleByName(conditionVO)
+
+	article := voTDo(condition)
+	code = model.ArticleUpdateInContent(condition.Path, article)
+	if code != result.ERROR {
+		log.Println("写入磁盘错误")
+		return code
+	}
+	return result.SUCCSE
+}
+
+func GetArticle(condition vo.ConditionVO) (res string, code int) {
+	//检查分类文件夹是否存在
+	checkContentDir, err := utils2.HasDirectoryOrFile(condition.ParentPath)
+	if !checkContentDir || err != nil {
+		log.Printf("未能找到{%v}:{%v}\n", condition.ParentPath, err)
+		return res, result.ERROR
+	}
+	//检查文章是否已存在
+	checkContentDir, err = utils2.HasDirectoryOrFile(condition.Path)
+	if !checkContentDir || os.IsNotExist(err) {
+		log.Printf("文章不存在，未能找到{%v}:{%v}\n", condition.Path, err)
+		return res, result.ERROR
+	}
+	res, code = model.GetArticleByName(condition.Path)
 	if code != result.SUCCSE {
 		return res, code
 	}
@@ -64,12 +97,18 @@ func GetArticle(conditionVO vo.ConditionVO) (res string, code int) {
 }
 
 func CreateArticle(condition vo.ConditionVO) int {
-	if !HasCategoryInDBTable(condition.CategoryMenuId) {
-		return result.ERROR_CATEGORY_NOT_FOUND
+	articlePath := condition.ParentPath + string(os.PathSeparator) + condition.ArticleTitle + common.JSON_FILE_SUFFIX
+	//检查分类文件夹是否存在
+	checkContentDir, err := utils2.HasDirectoryOrFile(condition.ParentPath)
+	if !checkContentDir || err != nil {
+		log.Printf("写入磁盘错误，未能找到{%v}:{%v}\n", condition.ParentPath, err)
+		return result.ERROR
 	}
-	IndexName := model.UNCLASSIFIED_ARTICLES
-	if condition.CategoryName != "" {
-		IndexName = utils.ConstructCategoryNameId(condition.CategoryName, condition.CategoryMenuId)
+	//检查文章是否已存在
+	checkContentDir, err = utils2.HasDirectoryOrFile(articlePath)
+	if checkContentDir || !os.IsNotExist(err) {
+		log.Printf("文章已存在，未能找到{%v}:{%v}\n", articlePath, err)
+		return result.ERROR
 	}
 	var article model.Article
 	article = voTDo(condition)
@@ -79,26 +118,16 @@ func CreateArticle(condition vo.ConditionVO) int {
 	//	return code
 	//}
 
-	code := model.ArticleWriteDir(article, IndexName)
+	code := model.ArticleWriteDir(article, articlePath)
 	if code != result.SUCCSE {
 		return code
 	}
 
-	code = model.ArticleWriteMenu(vo2Menu(condition))
 	return code
 }
 
-func vo2Menu(vo vo.ConditionVO) model.Menu {
-	var Do model.Menu
-	Do.Name = vo.ArticleTitle
-	Do.ParentId = vo.CategoryMenuId
-	Do.ParentName = vo.CategoryName
-	Do.Type = common.ARTICLE_TYPE
-	return Do
-}
-
 func QueryInCategory(condition vo.ConditionVO) ([]string, int) {
-	categoryNameInContent := utils.ConstructCategoryNameId(condition.CategoryName, condition.CategoryMenuId)
+	categoryNameInContent := condition.CategoryName
 
 	//检查index中分类文件夹是否存在
 	checkContentDir, err := model.HasCategoryInIndexDir(categoryNameInContent)
@@ -124,5 +153,7 @@ func voTDo(conditionVO vo.ConditionVO) model.Article {
 	//article.Category.Name = conditionVO.CategoryName
 	article.Title = conditionVO.ArticleTitle
 	article.Content = conditionVO.ArticleContent
+	article.Author = conditionVO.Author
+	article.KeyWords = conditionVO.Keywords
 	return article
 }

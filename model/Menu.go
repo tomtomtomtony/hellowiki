@@ -18,24 +18,15 @@ type Menu struct {
 	Type       uint8  `gorm:"type:varchar(10);not null" json:"type"`
 }
 
-func GetAllDirectMenuChildren(id uint) []Menu {
-	var menus []Menu
+// 获取所有文章信息，并以列表形式返回
+func GetAllArticle(pageSize int, pageNum int) ([]Menu, int64) {
 	dbBase := utils2.OpenDB()
-	err := dbBase.Limit(500).Where("parent_id=?", id).Find(&menus).Error
+	var res []Menu
+	var total int64
+	err := dbBase.Limit(pageSize).Offset((pageNum - 1) * pageSize).Where("type=2").Find(&res).Count(&total).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
-		log.Fatalf("查找id为{%v}的直接子类时，出现错误:{%v}\n", id, err)
-		return menus
+		log.Printf("获取全部文章信息时，出现错误:{%v}\n", err)
+		return res, total
 	}
-	return menus
-}
-
-func GetTopLevelMenu() []Menu {
-	var menus []Menu
-	dbBase := utils2.OpenDB()
-	err := dbBase.Limit(500).Where("parent_id=0").Find(&menus).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		log.Fatalf("查询顶级分类时出现错误:{%v}\n", err)
-		return menus
-	}
-	return menus
+	return res, total
 }
