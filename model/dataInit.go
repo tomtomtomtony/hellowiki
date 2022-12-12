@@ -59,9 +59,21 @@ func initDataBase() {
 		log.Fatalf("fail to connect database:{%v}", err)
 	}
 	dbBase.Set("gorm:table_options", "AUTO_INCREMENT=1")
+
 	err = dbBase.AutoMigrate(RegUser{})
 	if err != nil {
 		log.Fatalf("建表失败")
+	}
+	root := &RegUser{
+		Model:    gorm.Model{},
+		UserName: "admin",
+		PassWord: "admin",
+		IsEnable: true,
+		Roles:    "root",
+	}
+	err = dbBase.Create(&root).Error
+	if err != nil {
+		log.Fatalf("创建超级管理员失败:{%v}", err)
 	}
 }
 
