@@ -1,15 +1,36 @@
 [wikiInfo]
 WikiName="helloWiki"
 [dataBase]
-Location="./data/db/hellowikiBase.db"
+Location="db"
+DefaultDBName="hellowikiBase.db"
 [searchDB]
-Location="./data/db/articles/index/"
+Location="index"
 DefaultIndex="unclassified_articles"
 [dirDB]
-Location="./data/db/articles/txt/"
+Location="content"
 DefaultDir="unclassified_articles"
 [server]
 AppMode="debug"
 Port=":8080"
 [analyze]
 Dict="embed, zh"
+[dataDir]
+Location="./data"
+[jwtConfig]
+SecretKey="hellowiki7998"
+TokenExpireDuration="60m"
+Issuer="hellowikiAdmin"
+MaxRefreshTime="10m"
+[authenticationDB]
+Location="authenDB"
+ModelFile="Model.conf"
+PolicyFile="Policy.csv"
+PolicyDefinition="p = sub_rule, obj, act"
+RequestDefinition="r = sub, obj, act"
+Matchers="m = eval(p.sub_rule) && r.obj == p.obj && r.act == p.act"
+PolicyEffect="e = some(where (p.eft == allow))"
+RoleDefinition="g = _, _"
+[superAdmin]
+UserName="admin12345"
+PassWord="admin12345"
+Role="root"

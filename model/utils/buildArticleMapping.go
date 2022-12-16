@@ -3,7 +3,7 @@ package utils
 import (
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/mapping"
-	"hellowiki/service/search"
+	"hellowiki/model/searchConfig"
 )
 
 func BuildArticleMapping(tokenOpt map[string]interface{}) mapping.IndexMapping {
@@ -14,7 +14,7 @@ func BuildArticleMapping(tokenOpt map[string]interface{}) mapping.IndexMapping {
 	standardIndexed.IncludeInAll = false
 	standardIndexed.Index = true
 	standardIndexed.IncludeTermVectors = true
-	standardIndexed.Analyzer = search.TokenName
+	standardIndexed.Analyzer = searchConfig.TokenName
 
 	keywordIndexed := bleve.NewTextFieldMapping()
 	keywordIndexed.Store = false
@@ -39,7 +39,7 @@ func BuildArticleMapping(tokenOpt map[string]interface{}) mapping.IndexMapping {
 	indexMapping.AddDocumentMapping("article", articleMapping)
 	indexMapping.DefaultMapping = articleMapping
 
-	indexMapping.AddCustomAnalyzer(search.TokenName, tokenOpt)
-	indexMapping.DefaultAnalyzer = search.TokenName
+	indexMapping.AddCustomAnalyzer(searchConfig.TokenName, tokenOpt)
+	indexMapping.DefaultAnalyzer = searchConfig.TokenName
 	return indexMapping
 }

@@ -1,4 +1,4 @@
-package search
+package searchConfig
 
 import (
 	"github.com/blevesearch/bleve/v2/analysis"

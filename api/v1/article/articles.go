@@ -2,8 +2,8 @@ package article
 
 import (
 	"github.com/gin-gonic/gin"
+	"hellowiki/api/result"
 	"hellowiki/api/v1/article/vo"
-	"hellowiki/common/result"
 	"hellowiki/service"
 )
 
@@ -15,9 +15,38 @@ func CreateArticle(c *gin.Context) {
 	result.RestFulResult(c, code)
 }
 
-func GetAllInCategory(c *gin.Context) {
+func UpdateArticle(c *gin.Context) {
+	var article vo.ConditionVO
+	_ = c.ShouldBind(&article)
+	code := service.UpdateArticle(article)
+	result.RestFulResult(c, code)
+}
+
+// 获取一个分类下所有文章
+func GetAllTitleCurrentCategory(c *gin.Context) {
 	var condition vo.ConditionVO
 	_ = c.BindJSON(&condition)
-	data := service.QueryInCategory(condition)
+	data, code := service.QueryInCategory(condition)
+	if code != result.SUCCSE {
+		result.RestFulResult(c, code)
+	}
 	result.RestFulResult(c, result.SUCCSE, data)
+}
+
+// 获取指定的文章
+func GetArticle(c *gin.Context) {
+	var article vo.ConditionVO
+	_ = c.ShouldBind(&article)
+	res, code := service.GetArticle(article)
+	if code != result.SUCCSE {
+		result.RestFulResult(c, code)
+	}
+	result.RestFulResult(c, code, res)
+}
+
+func DelArticle(c *gin.Context) {
+	var article vo.ConditionVO
+	_ = c.ShouldBind(&article)
+	code := service.DeleteArticle(article)
+	result.RestFulResult(c, code)
 }

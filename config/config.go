@@ -4,33 +4,53 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"log"
+	"time"
 )
 
 type tomlConfig struct {
-	DataBase dataBase
-	SearchDB searchDB
-	DirDB    dirDB
-	WikiInfo wikiInfo
-	Server   server
-	Analyze  analyze
+	DataBase         dataBase
+	SearchDB         searchDB
+	DirDB            dirDB
+	WikiInfo         wikiInfo
+	Server           server
+	Analyze          analyze
+	DataDir          dataDir
+	JwtConfig        jwtConfig
+	AuthenticationDB authenticationDB
+	SuperAdmin       superAdmin
 }
 
 type dataBase struct {
-	userName string
-	password string
+	userName      string
+	password      string
+	Location      string
+	AbsPath       string
+	DefaultDBName string
+}
+type dataDir struct {
 	Location string
 }
-
 type searchDB struct {
-	Location      string
-	DefaultIndex  string
-	IndexPathName string
+	Location     string
+	DefaultIndex string
+	AbsPath      string
 }
-
+type authenticationDB struct {
+	Location          string
+	ModelFile         string
+	PolicyFile        string
+	AbsPath           string
+	PolicyDefinition  string
+	RequestDefinition string
+	Matchers          string
+	PolicyEffect      string
+	RoleDefinition    string
+}
 type dirDB struct {
-	Location    string
-	DefaultDir  string
-	TxtPathName string
+	Location        string
+	DefaultDir      string
+	AbsPath         string
+	ContentPathName string
 }
 
 type analyze struct {
@@ -44,6 +64,18 @@ type wikiInfo struct {
 type server struct {
 	AppMode string
 	Port    string
+}
+
+type jwtConfig struct {
+	SecretKey           string
+	TokenExpireDuration time.Duration
+	Issuer              string
+	MaxRefreshTime      time.Duration
+}
+type superAdmin struct {
+	UserName string
+	PassWord string
+	Role     string
 }
 
 var Cfg *tomlConfig
@@ -65,5 +97,4 @@ func init() {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-
 }

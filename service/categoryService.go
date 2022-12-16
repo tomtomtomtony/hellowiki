@@ -1,146 +1,150 @@
 package service
 
 import (
-	"github.com/blevesearch/bleve/v2"
+	"hellowiki/api/result"
+	vo2 "hellowiki/api/v1/article/vo"
 	"hellowiki/api/v1/category/vo"
-	"hellowiki/common"
-	"hellowiki/common/result"
+	"hellowiki/common/utils"
 	"hellowiki/config"
 	"hellowiki/model"
-	"hellowiki/service/search"
-	utils2 "hellowiki/service/utils"
+	"hellowiki/model/searchConfig"
+	utils2 "hellowiki/model/utils"
+	"io/fs"
 	"log"
 	"os"
-	"strconv"
+	"strings"
 )
 
-func CreateCategory(condition vo.ConditionVO) (code int) {
-	var data model.Category
-	var err error
-	if condition.ParentId == model.TOPLEVELCATEGORY {
-		code = handleCreateRootCategory(condition)
-	} else {
-		code = handleCreateNonRootCategory(condition)
+func CreateCategory(condition vo.CategoryVO) (code int) {
+	if 0 == len(condition.ParentPath) {
+		condition.ParentPath = config.Cfg.DirDB.AbsPath
 	}
+	absPathInContent := condition.ParentPath + string(os.PathSeparator) + condition.Name
+	//文件夹下是否已存在同名文件夹
+	check, _ := utils.HasDirectoryOrFile(absPathInContent)
+	if check {
+		return result.ERROR_CATEGORY_EXIST
+	}
+
+	//写入磁盘文件夹
+	code = model.WriteToContentDir(absPathInContent)
 	if code != result.SUCCSE {
+		log.Println("新增分类写入磁盘失败")
 		return result.ERROR
 	}
-	data = vo2Do(condition)
-	//写入数据库
-	code = model.CreateCategory(data)
-	if code != result.SUCCSE {
-		log.Println("新增分类写入数据库失败")
-		return result.ERROR
-	}
+
 	//写入索引文件
-	indexName := ConstructStandardIndexName(data.EngName, data.ID)
+	indexName := condition.Name
 	tokenOpt := map[string]interface{}{
 		"dicts":     config.Cfg.Analyze.Dict,
 		"stop":      "",
 		"opt":       "search-hmm",
 		"trim":      "trim",
 		"alpha":     false,
-		"type":      search.TokenName,
-		"tokenizer": search.TokenName,
+		"type":      searchConfig.TokenName,
+		"tokenizer": searchConfig.TokenName,
 	}
 	articlesMapping := utils2.BuildArticleMapping(tokenOpt)
-	index, err := bleve.New(config.Cfg.SearchDB.Location+indexName, articlesMapping)
-	defer index.Close()
-	if err != nil {
-		log.Println("新增分类写入索引失败")
+	indexParentPath := strings.Replace(absPathInContent, config.Cfg.DirDB.AbsPath, config.Cfg.SearchDB.AbsPath, -1)
+	code = model.WriteToCategoryIndex(indexParentPath, indexName, articlesMapping)
+	if code != result.SUCCSE {
+		return code
+	}
+
+	return result.SUCCSE
+}
+
+func DeleteCategory(condition vo.CategoryVO) int {
+
+	//2.删除txt文件
+	if !utils.FoldIsEmpty(condition.Path) {
+		log.Printf("content文件夹下指定文件夹{%v}不为空", condition.Path)
+		return result.ERROR_CATEGORY_NOT_EMPTY
+	}
+	code := model.DeleteCategoryInContent(condition.Path)
+	if code != result.SUCCSE {
+		log.Println("content文件夹下指定文件夹删除失败")
 		return result.ERROR
 	}
 
-	//写入磁盘文件夹
-	dirName := indexName
-	err = os.Mkdir(config.Cfg.DirDB.Location+dirName, os.ModePerm)
-	if err != nil {
-		log.Println("新增分类写入磁盘失败")
+	//3.删除索引文件
+	indexName := strings.Replace(condition.Path, config.Cfg.DirDB.AbsPath, config.Cfg.SearchDB.AbsPath, -1)
+	if !HasCategoryInIndex(indexName) {
+		log.Println("index文件夹下指定文件夹不存在")
+		return result.ERROR
+	}
+	code = model.DeleteCategoryInIndex(indexName)
+	if code != result.SUCCSE {
+		log.Println("index文件夹下指定文件夹删除失败")
 		return result.ERROR
 	}
 	return result.SUCCSE
+
 }
 
-func handleCreateRootCategory(categoryInfo vo.ConditionVO) int {
-	children := model.FindCategoryChildren(model.TOPLEVELCATEGORY)
-	for _, curr := range children {
-		if curr.Name == categoryInfo.Name {
-			return result.ERROR_CATEGORY_EXIST
-		}
+func HasCategoryInIndex(indexName string) bool {
+	check, _ := model.HasCategoryInIndexDir(indexName)
+	return check
+}
+
+func GetTopCategory() []vo.CategoryVO {
+	resRaw := model.GetTopLevelCategory()
+	var res = make([]vo.CategoryVO, 0, len(resRaw))
+	for _, item := range resRaw {
+		res = append(res, do2TopVo(item))
 	}
-	return result.SUCCSE
+	return res
 }
-
-func handleCreateNonRootCategory(categoryInfo vo.ConditionVO) int {
-	if !HasCategory(categoryInfo.CategoryId) {
-		return result.ERROR_CATEGORY_NOT_FOUND
+func do2TopVo(do fs.DirEntry) vo.CategoryVO {
+	var res vo.CategoryVO
+	res.Name = do.Name()
+	res.ParentName = ""
+	if do.IsDir() {
+		res.Type = "category"
+	} else {
+		res.Type = "article"
 	}
-	return result.SUCCSE
+	res.ParentPath = config.Cfg.DirDB.AbsPath
+	res.Path = config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + do.Name()
+	return res
 }
-
-func GetAllCategory(pageSize int, pageNum int) []model.Category {
-	return model.FindAllCategory(pageSize, pageNum)
-}
-
-func DeleteCategory(category model.Category) int {
-	children := model.FindCategoryChildren(category.ID)
-	var newData model.Category
-	tx := model.DbBase.Begin()
-	//1.更新每个孩子节点的父节点Id和名称
-	for _, curr := range children {
-		//1.1若为待删节点为根节点，其直接子节点将成为顶级父节点
-		if category.ParentId == model.TOPLEVELCATEGORY {
-			newData.ParentId, newData.ParentName = model.TOPLEVELCATEGORY, curr.Name
-		} else {
-			newData.ParentId, newData.ParentName = category.ParentId, category.ParentName
-		}
-		if err := tx.Model(&model.Category{}).Where("id=?", curr.ID).Updates(newData).Error; err != nil {
-			tx.Rollback()
-			return result.ERROR
-		}
-	} //2.删除节点本身
-	if err := tx.Delete(&model.Category{}, "id=?", category.ID).Error; err != nil {
-		tx.Rollback()
-		return result.ERROR
+func GetDirectChildren(currentPath string) []vo.CategoryVO {
+	resRaw := model.GetNextLevelCategory(currentPath)
+	var res = make([]vo.CategoryVO, 0, len(resRaw))
+	for _, item := range resRaw {
+		res = append(res, do2Vo(item, currentPath))
 	}
-	//3.若分类下没有文章，则对应的表也删除
-
-	tx.Commit()
-	return result.SUCCSE
+	return res
 }
+func do2Vo(do fs.DirEntry, parentPath string) vo.CategoryVO {
+	var res vo.CategoryVO
 
-func SetCategory(id uint, data model.Category) int {
-	if !HasCategory(id) {
-		return result.ERROR_CATEGORY_NOT_FOUND
+	res.Name = do.Name()
+	res.ParentName = ""
+	if do.IsDir() {
+		res.Type = "category"
+	} else {
+		res.Type = "article"
 	}
-	return model.UpdateCategoryById(id, data)
+	res.ParentPath = parentPath
+	res.Path = parentPath + string(os.PathSeparator) + do.Name()
+	return res
+}
+func GetArticleList(condition vo.CategoryVO) ([]vo2.ResultArticle, int64) {
+	var res []vo2.ResultArticle
+	resRaw, total := model.GetAllArticle(condition.PageSize, condition.PageNum)
+	for i := 0; i < len(resRaw); i++ {
+		res = append(res, do2ResultArticle(resRaw[i]))
+	}
+
+	return res, total
 }
 
-func HasCategory(id uint) bool {
-	return model.GetCategoryById(id) != model.Category{}
-}
-
-// 传入索引名称符合格式: article的 engName_categoryId
-func HasArticleIndex(indexName string) bool {
-	return model.HasCategoryDir(indexName)
-}
-
-//func repairTable(categoryId uint) int {
-//	var category model.Category
-//	category = model.GetCategoryById(categoryId)
-//
-//}
-
-func ConstructStandardIndexName(categoryEngName string, categoryId uint) string {
-	return categoryEngName + common.UNDER_SCORE + strconv.Itoa(int(categoryId))
-}
-
-func vo2Do(vo vo.ConditionVO) model.Category {
-	var Do model.Category
-	Do.ID = vo.CategoryId
-	Do.Name = vo.Name
-	Do.EngName = vo.EngName
-	Do.ParentId = vo.ParentId
-	Do.ParentName = vo.ParentName
-	return Do
+func do2ResultArticle(do model.Menu) vo2.ResultArticle {
+	var res vo2.ResultArticle
+	res.Title = do.Name
+	res.CategoryName = do.ParentName
+	res.CreateAt = do.CreatedAt.UnixMilli()
+	res.UpdateAt = do.UpdatedAt.UnixMilli()
+	return res
 }

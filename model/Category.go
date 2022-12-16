@@ -1,19 +1,19 @@
 package model
 
 import (
-	"gorm.io/gorm"
-	"hellowiki/common/result"
+	"github.com/blevesearch/bleve/v2/mapping"
+	"hellowiki/api/result"
+	utils2 "hellowiki/common/utils"
 	"hellowiki/config"
+	"io/fs"
+	"log"
 	"os"
 )
 
 // 文章分类
 type Category struct {
-	gorm.Model
-	Name       string `gorm:"type:varchar(40);not null" json:"name"`
-	EngName    string `gorm:"type:varchar(40);not null "json:"engName"`
-	ParentId   uint   `gorm:"type:int;not null" json:"parentId"`
-	ParentName string `gorm:"type:varchar(40);not null" json:"parentName"`
+	Name       string `json:"name"`
+	ParentName string `json:"parentName"`
 }
 
 var (
@@ -21,79 +21,50 @@ var (
 	TOPLEVELCATEGORY uint = 0
 )
 
-// 顶级父类id为0
-func FindCategoryChildren(id uint) []Category {
-	var categories []Category
-	err := DbBase.Limit(500).Where("parent_id=?", id).Find(&categories).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return []Category{}
-	}
-	return categories
+func HasCategoryInIndexDir(path string) (bool, error) {
+	return utils2.HasDirectoryOrFile(path)
 }
 
-func GetCategoryById(id uint) Category {
-	var category Category
-	err := DbBase.Take(&category, "id=?", id).Error
-	if err != nil {
-		return Category{}
-	}
-	return category
+//
+
+// 索引写入
+func WriteToCategoryIndex(parentPath string, indexName string, mapping mapping.IndexMapping) int {
+	return utils2.WriteToIndexDir(parentPath, indexName, mapping)
 }
 
-func HasCategoryDir(indexName string) bool {
-	_, err := os.OpenFile(config.Cfg.SearchDB.Location+indexName, os.O_RDONLY, os.ModePerm)
-	if err != nil {
-		return false
-	}
-	return true
-}
-
-func HasCategoryTable(tableName string) bool {
-	return DbBase.Migrator().HasTable(tableName)
-}
-
-// 新增分类数据
-func CreateCategory(data Category) (code int) {
-	err := DbBase.Create(&data).Error
+// data/content下分类文件夹写入
+func WriteToContentDir(absPath string) int {
+	err := os.Mkdir(absPath, os.ModePerm)
 	if err != nil {
 		return result.ERROR
 	}
 	return result.SUCCSE
+
 }
 
-// 查询分类列表
-func FindAllCategory(pageSize int, pageNum int) []Category {
-	var categories []Category
-	err := DbBase.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&categories).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return []Category{}
-	}
-	return categories
+// 索引文件夹删除
+func DeleteCategoryInIndex(path string) int {
+	return utils2.DeleteFold(path)
 }
 
-// 根据id，软删除分类信息
-func DeleteCategoryById(id uint) int {
-	err := DbBase.Delete(&Category{}, "id=?", id).Error
+func DeleteCategoryInContent(path string) int {
+	return utils2.DeleteFold(path)
+}
+
+func GetTopLevelCategory() []fs.DirEntry {
+	filesInfo, err := os.ReadDir(config.Cfg.DirDB.AbsPath)
 	if err != nil {
-		return result.ERROR
+		log.Printf("不能读取文件夹{%v}\n", config.Cfg.DirDB.AbsPath)
+		return []fs.DirEntry{}
 	}
-	return result.SUCCSE
+	return filesInfo
 }
 
-// 根据id，更新分类信息
-func UpdateCategoryById(id uint, category Category) int {
-	err := DbBase.Model(&category).Where("id=?", id).Updates(category).Error
+func GetNextLevelCategory(parentPath string) []fs.DirEntry {
+	filesInfo, err := os.ReadDir(parentPath)
 	if err != nil {
-		return result.ERROR
+		log.Printf("不能读取文件夹{%v}\n", parentPath)
+		return []fs.DirEntry{}
 	}
-	return result.SUCCSE
-}
-
-// 根据parentId更新
-func UpdateCategoryByParentId(parentId uint, category Category) (int, error) {
-	err := DbBase.Model(&category).Where("parent_id=?", parentId).Updates(category).Error
-	if err != nil {
-		return result.ERROR, err
-	}
-	return result.SUCCSE, err
+	return filesInfo
 }
