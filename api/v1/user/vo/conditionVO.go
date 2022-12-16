@@ -20,4 +20,5 @@ type ResultVO struct {
 	Id       uint   `json:"id"`
 	CreateAt int64  `json:"createAt"`
 	UpdateAt int64  `json:"updateAt"`
+	Roles    string `json:"roles"`
 }

@@ -1,9 +1,15 @@
 package model
 
 import (
+	"github.com/casbin/casbin/v2"
+	fileadapter "github.com/casbin/casbin/v2/persist/file-adapter"
 	"gorm.io/gorm"
 	"hellowiki/api/result"
 	utils2 "hellowiki/common/utils"
+	"hellowiki/config"
+	"log"
+	"os"
+	"strconv"
 )
 
 type RegUser struct {
@@ -11,7 +17,24 @@ type RegUser struct {
 	UserName string `gorm:"type:varchar(32);not null " json:"userName"`
 	PassWord string `gorm:"type:varchar(64);not null " json:"passWord"`
 	IsEnable bool   `gorm:"type:boolean;not null" json:"isEnable"`
-	Roles    string `gorm:"type:varchar(128);not null" json:"roles"`
+}
+
+func GetRolesForUserById(userId int) (res []string, code int) {
+	policyFile := config.Cfg.AuthenticationDB.AbsPath + string(os.PathSeparator) + config.Cfg.AuthenticationDB.PolicyFile
+	modelFile := config.Cfg.AuthenticationDB.AbsPath + string(os.PathSeparator) + config.Cfg.AuthenticationDB.ModelFile
+	csvAdapter := fileadapter.NewAdapter(policyFile)
+	enforcer, err := casbin.NewEnforcer(modelFile, csvAdapter)
+	if err != nil {
+		log.Printf("创建鉴权器失败:{%v}", err)
+		return res, result.ERROR
+	}
+	userIdStr := strconv.Itoa(userId)
+	res, err = enforcer.GetRolesForUser(userIdStr)
+	if err != nil {
+		log.Printf("获取用户角色失败:{%v}", err)
+		return res, result.ERROR
+	}
+	return res, result.SUCCSE
 }
 
 func HasUserById(id uint) (code int) {

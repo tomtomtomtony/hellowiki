@@ -8,15 +8,16 @@ import (
 )
 
 type tomlConfig struct {
-	DataBase     dataBase
-	SearchDB     searchDB
-	DirDB        dirDB
-	WikiInfo     wikiInfo
-	Server       server
-	Analyze      analyze
-	DataDir      dataDir
-	JwtConfig    jwtConfig
-	CasbinConfig CasbinConfig
+	DataBase         dataBase
+	SearchDB         searchDB
+	DirDB            dirDB
+	WikiInfo         wikiInfo
+	Server           server
+	Analyze          analyze
+	DataDir          dataDir
+	JwtConfig        jwtConfig
+	AuthenticationDB authenticationDB
+	SuperAdmin       superAdmin
 }
 
 type dataBase struct {
@@ -34,8 +35,16 @@ type searchDB struct {
 	DefaultIndex string
 	AbsPath      string
 }
-type CasbinConfig struct {
-	RolesConfig string
+type authenticationDB struct {
+	Location          string
+	ModelFile         string
+	PolicyFile        string
+	AbsPath           string
+	PolicyDefinition  string
+	RequestDefinition string
+	Matchers          string
+	PolicyEffect      string
+	RoleDefinition    string
 }
 type dirDB struct {
 	Location        string
@@ -62,6 +71,11 @@ type jwtConfig struct {
 	TokenExpireDuration time.Duration
 	Issuer              string
 	MaxRefreshTime      time.Duration
+}
+type superAdmin struct {
+	UserName string
+	PassWord string
+	Role     string
 }
 
 var Cfg *tomlConfig

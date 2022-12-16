@@ -21,6 +21,7 @@ func InitRouter() *gin.Engine {
 		routerUserV1.DELETE("/del/:id", user.DeleteUser)
 		routerUserV1.PUT("/editName/:id", user.SetUserName)
 		routerUserV1.PUT("/editRole/:id", user.SetUserRoles)
+		routerUserV1.GET("/getRoles", user.QueryUserRoles)
 
 	}
 	//分类模块

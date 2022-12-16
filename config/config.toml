@@ -21,5 +21,16 @@ SecretKey="hellowiki7998"
 TokenExpireDuration="60m"
 Issuer="hellowikiAdmin"
 MaxRefreshTime="10m"
-[role_definition]
-g ="_, _"
+[authenticationDB]
+Location="authenDB"
+ModelFile="Model.conf"
+PolicyFile="Policy.csv"
+PolicyDefinition="p = sub_rule, obj, act"
+RequestDefinition="r = sub, obj, act"
+Matchers="m = eval(p.sub_rule) && r.obj == p.obj && r.act == p.act"
+PolicyEffect="e = some(where (p.eft == allow))"
+RoleDefinition="g = _, _"
+[superAdmin]
+UserName="admin12345"
+PassWord="admin12345"
+Role="root"

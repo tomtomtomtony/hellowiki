@@ -65,6 +65,12 @@ func SetUserName(c *gin.Context) {
 	result.RestFulResult(c, code)
 }
 
+func QueryUserRoles(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Query("id"))
+	res, code := service.GetUserRoles(id)
+	result.RestFulResult(c, code, res)
+}
+
 func SetUserRoles(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var condition vo.RegUserVO
