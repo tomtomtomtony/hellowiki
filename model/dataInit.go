@@ -64,12 +64,12 @@ func initDataBase() {
 	}
 	dbBase.Set("gorm:table_options", "AUTO_INCREMENT=1")
 
-	err = dbBase.AutoMigrate(RegUser{})
+	err = dbBase.AutoMigrate(RegUser{}, Role{})
 	if err != nil {
-		log.Fatalf("建表失败")
+		log.Fatalf("建表失败：{%v}", err)
 	}
 	var root RegUser
-	//创建超级管理员,仅在程序第一次运行时起作用
+	//创建超级管理员账号,仅在程序第一次运行时起作用
 	var userNumber int64
 	dbBase.Model(&RegUser{}).Count(&userNumber)
 	if userNumber < 1 {
@@ -80,6 +80,16 @@ func initDataBase() {
 		err = dbBase.Create(&root).Error
 		if err != nil {
 			log.Fatalf("创建超级管理员失败:{%v}", err)
+		}
+	}
+	//创建超级管理员角色，仅在程序第一次运行时起作用
+	var rootRole Role
+	dbBase.Model(&Role{}).Count(&userNumber)
+	if userNumber < 1 {
+		rootRole.RoleName = config.Cfg.SuperAdmin.Role
+		err = dbBase.Create(&rootRole).Error
+		if err != nil {
+			log.Fatalf("创建超级管理员角色失败:{%v}", err)
 		}
 	}
 
@@ -166,7 +176,12 @@ func initAuthenticationDB() {
 	//创建鉴权模型文件
 	modelFile := config.Cfg.AuthenticationDB.AbsPath + string(os.PathSeparator) + config.Cfg.AuthenticationDB.ModelFile
 	file, err := os.Open(modelFile)
-	defer func() { file.Close() }()
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			log.Printf("未能正确关闭文件:{%v}", err)
+		}
+	}(file)
 	if err != nil && os.IsNotExist(err) {
 		newFile, err := os.Create(modelFile)
 		if err != nil {
@@ -199,10 +214,9 @@ func initAuthenticationDB() {
 			log.Fatalf("创建鉴权器失败:{%v}", err)
 		}
 		//将用户数据库第一位设为超级管理员
-		//“1”表示超级管理员在用户数据库中的ID
+		//“1”表示超级管理员在数据库注册用户表(reg_user)中的ID
 		enforcer.AddRoleForUser("1", config.Cfg.SuperAdmin.Role)
 		enforcer.SavePolicy()
-
 	}
 
 }

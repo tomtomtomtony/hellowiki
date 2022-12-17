@@ -3,8 +3,9 @@ package utils
 import (
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/mapping"
+	"github.com/casbin/casbin/v2"
+	fileadapter "github.com/casbin/casbin/v2/persist/file-adapter"
 	"hellowiki/api/result"
-	"hellowiki/common"
 	"hellowiki/config"
 	"io"
 	"log"
@@ -28,7 +29,12 @@ func FoldIsEmpty(absPath string) bool {
 		log.Printf("不能打开文件夹{%v}\n", absPath)
 		return false
 	}
-	defer dir.Close()
+	defer func(dir *os.File) {
+		err := dir.Close()
+		if err != nil {
+			log.Printf("未能正确关闭文件夹:{%v}", err)
+		}
+	}(dir)
 	_, err = dir.Readdirnames(1)
 	return err == io.EOF
 }
@@ -55,15 +61,6 @@ func DeleteFold(absPath string) int {
 	return result.SUCCSE
 }
 
-// 在data/content创建文件夹
-func CreateFoldContent(parentPath string, foldName string) int {
-	err := os.Mkdir(parentPath+string(os.PathSeparator)+foldName, os.ModePerm)
-	if err != nil {
-		return result.ERROR
-	}
-	return result.SUCCSE
-}
-
 func OpenIndex(absPath string) (bleve.Index, int) {
 	_, err := HasDirectoryOrFile(absPath)
 	if err != nil {
@@ -78,15 +75,14 @@ func OpenIndex(absPath string) (bleve.Index, int) {
 	return dbSearch, result.SUCCSE
 }
 
-func HasCategoryInIndexDir(indexName string) (bool, error) {
-	return HasDirectoryOrFile(config.Cfg.SearchDB.AbsPath + string(os.PathSeparator) + indexName)
-}
-
-func HasCategoryInContentDir(categoryName string) (bool, error) {
-	return HasDirectoryOrFile(config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + categoryName)
-}
-
-func HasMdFileInContentDir(categoryNameId string, mdFileName string) (bool, error) {
-	return HasDirectoryOrFile(config.Cfg.DirDB.AbsPath + string(os.PathSeparator) + categoryNameId + string(os.PathSeparator) + mdFileName + common.JSON_FILE_SUFFIX)
-
+func GetEnforcer() (enforcer *casbin.Enforcer) {
+	policyFile := config.Cfg.AuthenticationDB.AbsPath + string(os.PathSeparator) + config.Cfg.AuthenticationDB.PolicyFile
+	modelFile := config.Cfg.AuthenticationDB.AbsPath + string(os.PathSeparator) + config.Cfg.AuthenticationDB.ModelFile
+	csvAdapter := fileadapter.NewAdapter(policyFile)
+	enforcer, err := casbin.NewEnforcer(modelFile, csvAdapter)
+	if err != nil {
+		log.Printf("创建鉴权器失败:{%v}", err)
+		return nil
+	}
+	return enforcer
 }

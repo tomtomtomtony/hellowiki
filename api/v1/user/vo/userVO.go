@@ -15,10 +15,15 @@ type LoginUserVO struct {
 	Token    string `json:"token"`
 }
 
-type ResultVO struct {
+type UserResult struct {
 	UserName string `json:"userName"`
 	Id       uint   `json:"id"`
 	CreateAt int64  `json:"createAt"`
 	UpdateAt int64  `json:"updateAt"`
 	Roles    string `json:"roles"`
+}
+
+type UserList struct {
+	Total    int64        `json:"total"`
+	UserList []UserResult `json:"userList"`
 }
