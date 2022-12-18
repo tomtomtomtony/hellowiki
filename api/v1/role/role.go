@@ -45,3 +45,12 @@ func do2Vo(role model.Role) vo2.RoleResult {
 	res.UpdateAt = role.UpdatedAt.UnixMilli()
 	return res
 }
+
+func UpdateUserRole(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	var condition vo2.RoleConditionVO
+	_ = c.ShouldBind(&condition)
+	code := service.AddRolesForUser(id, condition)
+	result.RestFulResult(c, code)
+
+}

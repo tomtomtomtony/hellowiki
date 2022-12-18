@@ -1,9 +1,10 @@
 package vo
 
 type RoleConditionVO struct {
-	RoleName string `json:"roleName"`
-	PageSize int    `json:"pageSize"`
-	PageNum  int    `json:"pageNum"`
+	RoleName string   `json:"roleName"`
+	Roles    []string `json:"roles"`
+	PageSize int      `json:"pageSize"`
+	PageNum  int      `json:"pageNum"`
 }
 
 type RoleResult struct {

@@ -27,7 +27,7 @@ ModelFile="Model.conf"
 PolicyFile="Policy.csv"
 PolicyDefinition="p = sub_rule, obj, act"
 RequestDefinition="r = sub, obj, act"
-Matchers="m = eval(p.sub_rule) && r.obj == p.obj && r.act == p.act"
+Matchers="m = eval(p.sub_rule) && r.obj == p.obj && r.act == p.act || r.sub == \"root\""
 PolicyEffect="e = some(where (p.eft == allow))"
 RoleDefinition="g = _, _"
 [superAdmin]

@@ -29,6 +29,7 @@ func InitRouter() *gin.Engine {
 		routerRoleV1.GET("/all", role.QueryAllRoles)
 		routerRoleV1.GET("/getRoles", role.QueryUserRoles)
 		routerRoleV1.POST("/create", role.RegRole)
+		routerRoleV1.PUT("/updateUserRole/:id", role.UpdateUserRole)
 	}
 
 	//分类模块
