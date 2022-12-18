@@ -33,6 +33,9 @@ const (
 	ERROR_HEADER_EMPTY             = 4005
 	ERROR_HEADER_MALFORMED         = 4006
 	ERROR_TOKEN_NOT_FOUND          = 4007
+
+	//角色模块
+	ERROR_ROLE_EXIST = 5001
 )
 
 var codeMsg = map[int]string{
@@ -53,6 +56,7 @@ var codeMsg = map[int]string{
 	ERROR_TOKEN_NOT_FOUND:                  "请求未携带令牌，无权限访问",
 	ERROR_ARTICLE_NOT_FOUND:                "指定文章未找到",
 	ERROR_CATEGORY_NOT_EMPTY:               "分类下不为空",
+	ERROR_ROLE_EXIST:                       "角色已存在",
 }
 
 func GetMsg(code int) string {

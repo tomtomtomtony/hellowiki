@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"hellowiki/api/v1/article"
 	"hellowiki/api/v1/category"
+	"hellowiki/api/v1/role"
 	"hellowiki/api/v1/user"
 	"hellowiki/middleware"
 )
@@ -21,9 +22,16 @@ func InitRouter() *gin.Engine {
 		routerUserV1.DELETE("/del/:id", user.DeleteUser)
 		routerUserV1.PUT("/editName/:id", user.SetUserName)
 		routerUserV1.PUT("/editRole/:id", user.SetUserRoles)
-		routerUserV1.GET("/getRoles", user.QueryUserRoles)
-
 	}
+	//角色模块
+	routerRoleV1 := r.Group("api/v1/role")
+	{
+		routerRoleV1.GET("/all", role.QueryAllRoles)
+		routerRoleV1.GET("/getRoles", role.QueryUserRoles)
+		routerRoleV1.POST("/create", role.RegRole)
+		routerRoleV1.PUT("/updateUserRole/:id", role.UpdateUserRole)
+	}
+
 	//分类模块
 	routerCategoryV1 := r.Group("api/v1/category")
 	routerCategoryV1.Use(middleware.JWTAuth())

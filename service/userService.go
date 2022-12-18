@@ -50,7 +50,7 @@ func vo2Do(userVo vo.RegUserVO) model.RegUser {
 	do.PassWord = userVo.PassWord
 	return do
 }
-func GetAllRegUserInfo(pageSize int, pageNum int) []model.RegUser {
+func GetAllRegUserInfo(pageSize int, pageNum int) (res []model.RegUser, total int64) {
 	return model.FindAllUser(pageSize, pageNum)
 }
 
@@ -67,14 +67,6 @@ func pswCrypt(password string) string {
 	return string(hash)
 }
 
-func GetUserRoles(userId int) (res []string, code int) {
-	if model.HasUserById(uint(userId)) == result.SUCCSE {
-		return res, result.ERROR_USER_NOT_FOUND
-	}
-	return model.GetRolesForUserById(userId)
-
-}
-
 func SetUserName(id uint, condition vo.RegUserVO) int {
 	if model.HasUserById(id) == result.SUCCSE {
 		return result.ERROR_USER_NOT_FOUND
@@ -85,15 +77,6 @@ func SetUserName(id uint, condition vo.RegUserVO) int {
 func SetRoles(id uint, condition vo.RegUserVO) int {
 	if model.HasUserById(id) == result.SUCCSE {
 		return result.ERROR_USER_NOT_FOUND
-
 	}
 	return model.UpdateUserById(id, "roles", condition.Roles)
-}
-
-func regUserVo2Do(vo vo.RegUserVO) model.RegUser {
-	var res model.RegUser
-	res.UserName = vo.UserName
-	res.PassWord = vo.PassWord
-	res.IsEnable = vo.IsEnable
-	return res
 }

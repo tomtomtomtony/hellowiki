@@ -44,11 +44,12 @@ func QueryAllUserInfo(c *gin.Context) {
 	var pageSize, pageNum = 10, 1
 	pageSize, _ = strconv.Atoi(c.Query("pageSize"))
 	pageNum, _ = strconv.Atoi(c.Query("pageNum"))
-	data := service.GetAllRegUserInfo(pageSize, pageNum)
-	var res []vo.ResultVO
+	data, total := service.GetAllRegUserInfo(pageSize, pageNum)
+	var res vo.UserList
 	for i := 0; i < len(data); i++ {
-		res = append(res, do2ResultVo(data[i]))
+		res.UserList = append(res.UserList, do2ResultVo(data[i]))
 	}
+	res.Total = total
 	result.RestFulResult(c, result.SUCCSE, res)
 }
 
@@ -65,12 +66,6 @@ func SetUserName(c *gin.Context) {
 	result.RestFulResult(c, code)
 }
 
-func QueryUserRoles(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Query("id"))
-	res, code := service.GetUserRoles(id)
-	result.RestFulResult(c, code, res)
-}
-
 func SetUserRoles(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	var condition vo.RegUserVO
@@ -83,8 +78,8 @@ func SetUserRoles(c *gin.Context) {
 	result.RestFulResult(c, code)
 }
 
-func do2ResultVo(regUser model.RegUser) vo.ResultVO {
-	var res vo.ResultVO
+func do2ResultVo(regUser model.RegUser) vo.UserResult {
+	var res vo.UserResult
 	res.UserName = regUser.UserName
 	res.Id = regUser.ID
 	res.CreateAt = regUser.CreatedAt.UnixMilli()
