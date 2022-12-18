@@ -64,7 +64,7 @@ func initDataBase() {
 	}
 	dbBase.Set("gorm:table_options", "AUTO_INCREMENT=1")
 
-	err = dbBase.AutoMigrate(RegUser{}, Role{})
+	err = dbBase.AutoMigrate(RegUser{}, Role{}, Permission{})
 	if err != nil {
 		log.Fatalf("建表失败：{%v}", err)
 	}

@@ -12,6 +12,7 @@ func JWTAuth() gin.HandlerFunc {
 		claims, code := (*utils.JWT).ParserToken(&utils.JWT{}, c)
 		if code != result.SUCCSE {
 			log.Printf("解析token失败:{%v}", code)
+			result.RestFulResult(c, code)
 			c.Abort()
 		}
 		// 将解析后的有效载荷claims重新写入gin.Context引用对象中

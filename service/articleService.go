@@ -150,7 +150,6 @@ func QueryInCategory(condition vo.ConditionVO) ([]string, int) {
 
 func voTDo(conditionVO vo.ConditionVO) model.Article {
 	var article model.Article
-	//article.Category.Name = conditionVO.CategoryName
 	article.Title = conditionVO.ArticleTitle
 	article.Content = conditionVO.ArticleContent
 	article.Author = conditionVO.Author

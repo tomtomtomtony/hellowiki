@@ -9,10 +9,10 @@ type RegUserVO struct {
 }
 
 type LoginUserVO struct {
-	Code     int    `json:"code"`
 	UserName string `json:"userName" validate:"required"`
 	PassWord string `json:"passWord" validate:"required"`
 	Token    string `json:"token"`
+	UserId   uint   `json:"userId"`
 }
 
 type UserResult struct {

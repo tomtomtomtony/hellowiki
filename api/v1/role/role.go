@@ -29,8 +29,8 @@ func QueryAllRoles(c *gin.Context) {
 	}
 	res.Total = total
 	result.RestFulResult(c, code, res)
-
 }
+
 func QueryUserRoles(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Query("id"))
 	res, code := service.GetUserRoles(id)
@@ -44,6 +44,10 @@ func do2Vo(role model.Role) vo2.RoleResult {
 	res.CreateAt = role.CreatedAt.UnixMilli()
 	res.UpdateAt = role.UpdatedAt.UnixMilli()
 	return res
+}
+
+func AddPermissionsToUser() {
+
 }
 
 func UpdateUserRole(c *gin.Context) {

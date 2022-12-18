@@ -10,21 +10,21 @@ import (
 	"reflect"
 )
 
-func UserLogin(condition vo.LoginUserVO) (userName string, token string, code int) {
+func UserLogin(condition vo.LoginUserVO) (userName string, token string, code int, userId uint) {
 	userInfo := model.FindByName(condition.UserName)
 	if reflect.DeepEqual(userInfo, model.RegUser{}) {
 		log.Println("用户不存在")
-		return "", "", result.ERROR_USER_NOT_FOUND
+		return "", "", result.ERROR_USER_NOT_FOUND, 0
 	}
 	inputPwd := []byte(condition.PassWord)
 	dbFindPwd := []byte(userInfo.PassWord)
 	err := bcrypt.CompareHashAndPassword(dbFindPwd, inputPwd)
 	if err != nil {
 		log.Println("密码不正确")
-		return "", "", result.ERROR_PASSWORD_WRONG
+		return "", "", result.ERROR_PASSWORD_WRONG, 0
 	}
 	token = utils.NewJWT().IssueToken(userInfo.UserName)
-	return userInfo.UserName, token, result.SUCCSE
+	return userInfo.UserName, token, result.SUCCSE, userInfo.ID
 }
 
 func CreateUser(condition vo.RegUserVO) (code int) {

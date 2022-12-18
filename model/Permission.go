@@ -1,32 +1,46 @@
 package model
 
-// 模拟枚举行为，设计读写等权限
-type read struct {
-	id   int8
-	name string
+import (
+	"gorm.io/gorm"
+	"hellowiki/api/result"
+	utils2 "hellowiki/common/utils"
+	"log"
+)
+
+// 设计读写等权限
+type Permission struct {
+	gorm.Model
+	PermissionName string `gorm:"type:varchar(32);not null" json:"permissionName"`
 }
 
-func (it read) NewRead() read {
-	it.id = 1
-	it.name = "read"
-	return it
+func GetAllPermissionType(pageNum int, pageSize int) (permissions []Permission, total int64) {
+	dbBase := utils2.OpenDB()
+	err := dbBase.Limit(pageSize).Offset((pageNum - 1) * pageSize).Find(&permissions).Count(&total).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return permissions, 0
+	}
+	return permissions, total
 }
 
-func (it read) GetName() string {
-	return it.name
+// 插入用户数据
+func InsertPermissionInfo(data Permission) (code int) {
+	dbBase := utils2.OpenDB()
+	err := dbBase.Create(&data).Error
+	if err != nil {
+		log.Printf("插入权限错误:{%v}", err)
+		return result.ERROR
+	}
+	return result.SUCCSE
 }
 
-type write struct {
-	id   int8
-	name string
-}
-
-func (it write) NewWrite() write {
-	it.id = 2
-	it.name = "write"
-	return it
-}
-
-func (it write) GetName() string {
-	return it.name
+func HasPermissionByName(permissionName string) (code int) {
+	var permission Permission
+	dbBase := utils2.OpenDB()
+	dbBase.Take(&permission, "permission_name=?", permissionName)
+	if permission.ID > 0 {
+		//权限已存在
+		return result.ERROR_USERNAME_USED
+	}
+	//权限不存在
+	return result.SUCCSE
 }

@@ -36,6 +36,9 @@ const (
 
 	//角色模块
 	ERROR_ROLE_EXIST = 5001
+
+	//权限模块
+	ERROR_PERMISSION_EXIST = 6001
 )
 
 var codeMsg = map[int]string{
@@ -57,6 +60,7 @@ var codeMsg = map[int]string{
 	ERROR_ARTICLE_NOT_FOUND:                "指定文章未找到",
 	ERROR_CATEGORY_NOT_EMPTY:               "分类下不为空",
 	ERROR_ROLE_EXIST:                       "角色已存在",
+	ERROR_PERMISSION_EXIST:                 "权限已存在",
 }
 
 func GetMsg(code int) string {

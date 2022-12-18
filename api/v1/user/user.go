@@ -15,11 +15,11 @@ var code int
 func Login(c *gin.Context) {
 	var userInfo vo.LoginUserVO
 	_ = c.ShouldBind(&userInfo)
-	userName, token, code := service.UserLogin(userInfo)
+	userName, token, code, userId := service.UserLogin(userInfo)
 	var res vo.LoginUserVO
 	res.Token = token
 	res.UserName = userName
-	res.Code = code
+	res.UserId = userId
 	result.RestFulResult(c, code, res)
 }
 
