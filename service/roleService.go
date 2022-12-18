@@ -28,24 +28,20 @@ func AddRolesForUser(userId int, condition vo2.RoleConditionVO) (code int) {
 	enforcer := utils2.GetEnforcer()
 	userIdStr := strconv.Itoa(userId)
 	//清空当前用户的角色
-	curr, code := GetUserRoles(userId)
-	if code != result.SUCCSE {
-		log.Printf("未能正确获取当前用户角色")
-	}
-	for _, role := range curr {
-		_, err := enforcer.DeleteRoleForUser(userIdStr, role)
-		if err != nil {
-			log.Printf("未能正确删除角色{%v}:{%v}", role, err)
-			return 0
-		}
+	_, err := enforcer.DeleteRolesForUser(userIdStr)
+	if err != nil {
+		log.Printf("未能正确清空当前用户角色:{%v}", err)
+		return result.ERROR
 	}
 	//添加目标角色
-	for _, role := range condition.Roles {
-		enforcer.AddRoleForUser(userIdStr, role)
-	}
-	err := enforcer.SavePolicy()
+	_, err = enforcer.AddRolesForUser(userIdStr, condition.Roles)
 	if err != nil {
-		log.Printf("保持策略时发生错误:{%v}", err)
+		log.Printf("未能正确添加用户角色:{%v}", err)
+		return result.ERROR
+	}
+	err = enforcer.SavePolicy()
+	if err != nil {
+		log.Printf("保存策略时发生错误:{%v}", err)
 		return result.ERROR
 	}
 	return result.SUCCSE
